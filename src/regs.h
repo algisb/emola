@@ -1,6 +1,6 @@
 #ifndef REGISTER_H_
 #define REGISTER_H_
-typedef struct
+struct Regs
 {
     union
     {
@@ -19,5 +19,6 @@ typedef struct
         
     };
     
-} Regs;
+};
+typedef struct Regs Regs;
 #endif
