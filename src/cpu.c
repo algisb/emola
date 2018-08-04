@@ -9,15 +9,15 @@ struct CPU
     unsigned char Flags;
 };
 
-int createCPU(CPU * _cpu)
+int createCPU(CPU ** _cpu)
 {
-    _cpu = (CPU*)malloc(sizeof(CPU));
+    *_cpu = (CPU*)malloc(sizeof(CPU));
     return 0;
 }
 
-int destroyCPU(CPU * _cpu)
+int destroyCPU(CPU ** _cpu)
 {
-    free(_cpu);
+    free(*_cpu);
     return 0;
 }
 

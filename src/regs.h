@@ -4,17 +4,50 @@ struct Regs
 {
     union
     {
-        unsigned char reg[10];
         struct
         {
-            unsigned char A;
-            unsigned char B;
-            unsigned char C;
-            unsigned char D;
-            unsigned char E;
-            unsigned char F;
-            unsigned char G;
-            unsigned char H;
+            union
+            {   
+                unsigned short AF;
+                struct
+                {
+                    unsigned char A; //Hi
+                    unsigned char F; //Flag register
+                };
+            };
+            
+            union
+            {
+                unsigned short BC;
+                struct
+                {
+                    unsigned char B;
+                    unsigned char C;
+                };
+                
+            };
+            union
+            {
+                unsigned short DE;
+                struct
+                {
+                    unsigned char D;
+                    unsigned char E;
+                };
+            };
+            union
+            {
+                unsigned short HL;
+                struct
+                {
+                    unsigned char H;
+                    unsigned char L;
+                };
+            };
+            
+            unsigned short SP; //Stack pointer
+            
+            unsigned short PC; //Program counter
         };
         
     };

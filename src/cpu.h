@@ -4,7 +4,7 @@
 struct CPU;
 typedef struct CPU CPU;
 
-int createCPU(CPU * _cpu);
-int destroyCPU(CPU * _cpu);
+int createCPU(CPU ** _cpu);
+int destroyCPU(CPU ** _cpu);
 
 #endif
