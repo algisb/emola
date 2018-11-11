@@ -48,10 +48,14 @@ struct Regs
             unsigned short SP; //Stack pointer
             
             unsigned short PC; //Program counter
+            
+            unsigned char IR; //Instruction register
         };
         
     };
     
 };
 typedef struct Regs Regs;
+
+int resetRegs(Regs * _regs);
 #endif
