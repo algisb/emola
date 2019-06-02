@@ -4,7 +4,7 @@ struct Regs
 {
     union
     {
-        struct
+         struct
         {
             union
             {   

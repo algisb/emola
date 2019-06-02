@@ -7,7 +7,7 @@ int main(int argc, char ** argv)
 	GBDevice * device = NULL;
     
     createGBDevice(&device);
-    run(&device);
+    run(device);
     destroyGBDevice(&device);
 
 	return 0;
