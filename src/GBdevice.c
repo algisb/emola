@@ -45,8 +45,7 @@ int run(GBDevice *_dev)
 {
     while(_dev->on)//each tick
     {
-        fetchInst(_dev->cpu, _dev->ram);
-        decodeExecInst(_dev->cpu, _dev->ram);
+        feDeExInst(_dev->cpu, _dev->ram);
     }
     printf("GBdevice turning off \n");              
     return 0;

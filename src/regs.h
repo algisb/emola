@@ -4,7 +4,7 @@ struct Regs
 {
     union
     {
-         struct
+        struct
         {
             union
             {   
@@ -50,6 +50,7 @@ struct Regs
             unsigned short PC; //Program counter
             
             unsigned char IR; //Instruction register
+            
         };
         
     };
