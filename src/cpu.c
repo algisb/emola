@@ -6,6 +6,7 @@
 struct CPU
 {
     Regs regs;
+    unsigned int cycles;
 };
 
 #define SHOW_DEBUG_INFO
@@ -71,6 +72,10 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 
                 printf("reg B data: %d\n", regs->B);
                 printf("reg H data: %d\n", regs->H);
+                
+                printf("reg HL data: %d\n", regs->HL);
+                
+                printf("data at address 1420: %d\n", _memory[1420]);
                 while(1)//wait for interrupt or reset
                 {
                     
@@ -79,11 +84,20 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
             }
             
             //8 bit loads---------------------------------------------------------------------------------
+            case 0x3E:
+            {
+                PRINT_INSTRUCTION("LD A *\n");
+                regs->A = _memory[regs->PC + 1];//access the immediate memory going after the instruction
+                _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
+                break;
+            }
             case 0x06:
             {
                 PRINT_INSTRUCTION("LD B *\n");
                 regs->B = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             case 0x0E:
@@ -91,6 +105,7 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 PRINT_INSTRUCTION("LD C *\n");
                 regs->C = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             case 0x16:
@@ -98,6 +113,7 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 PRINT_INSTRUCTION("LD D *\n");
                 regs->D = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             case 0x1E:
@@ -105,6 +121,7 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 PRINT_INSTRUCTION("LD E *\n");
                 regs->E = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             case 0x26:
@@ -112,6 +129,7 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 PRINT_INSTRUCTION("LD H *\n");
                 regs->H = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             case 0x2E:
@@ -119,11 +137,34 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 PRINT_INSTRUCTION("LD L *\n");
                 regs->L = _memory[regs->PC + 1];//access the immediate memory going after the instruction
                 _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
+                break;
+            }
+            case 0x36:
+            {
+                PRINT_INSTRUCTION("LD (HL) *\n");
+                _memory[_cpu->regs.HL] = _memory[regs->PC + 1];
+                _cpu->regs.PC += 2;
+                _cpu->cycles += 8;
                 break;
             }
             
+            //16 bit loads---------------------------------------------------------------------------------
+            case 0x21:
+            {
+                PRINT_INSTRUCTION("LD HL **\n");
+                _cpu->regs.H = _memory[regs->PC + 1];
+                _cpu->regs.L = _memory[regs->PC + 2];
+                
+                _cpu->regs.PC += 3;
+                _cpu->cycles += 12;
+                break;
+            }
+            
+            
+            
             default:
-                printf("Uninplemented instruction: %d\n", _cpu->regs.IR);
+                printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
                 
         }
     }
