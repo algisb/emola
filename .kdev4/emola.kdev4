@@ -12,6 +12,7 @@ CMake Binary=/usr/bin/cmake
 Environment Profile=
 Extra Arguments=
 Install Directory=/usr/local
+Runtime=Host System
 
 [Launch]
 Launch Configurations=Launch Configuration 0

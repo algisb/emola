@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "regs.h"
 #include "defs.h"
 struct CPU
@@ -76,6 +77,8 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 printf("reg HL data: %d\n", regs->HL);
                 
                 printf("data at address 1420: %d\n", _memory[1420]);
+                
+                printf("reg SP data: %d\n", regs->SP);
                 while(1)//wait for interrupt or reset
                 {
                     
@@ -150,6 +153,29 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
             }
             
             //16 bit loads---------------------------------------------------------------------------------
+            case 0x01:
+            {
+                PRINT_INSTRUCTION("LD BC **\n");
+                _cpu->regs.L = _memory[regs->PC + 1];
+                _cpu->regs.D = _memory[regs->PC + 2];
+                
+                _cpu->regs.PC += 3;
+                _cpu->cycles += 12;
+                break;
+            }
+            
+            case 0x11:
+            {
+                PRINT_INSTRUCTION("LD DE **\n");
+                _cpu->regs.D = _memory[regs->PC + 1];
+                _cpu->regs.E = _memory[regs->PC + 2];
+                
+                _cpu->regs.PC += 3;
+                _cpu->cycles += 12;
+                
+                break;
+            }
+            
             case 0x21:
             {
                 PRINT_INSTRUCTION("LD HL **\n");
@@ -161,10 +187,20 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 break;
             }
             
+            case 0x31:
+            {
+                PRINT_INSTRUCTION("LD SP **\n");
+                memcpy(&_cpu->regs.SP, &_memory[regs->PC + 1], 2);
+                
+                _cpu->regs.PC += 3;
+                _cpu->cycles += 12;
+                break;
+            }
             
             
             default:
                 printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
+                _cpu->regs.IR = 0x76;
                 
         }
     }

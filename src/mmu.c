@@ -25,7 +25,7 @@ int createRAM(unsigned char ** _ram)
     //instruction 3(LD HL **)
     ram[i] = 0x21;
     i++;
-    short * tmp = (ram + 6);
+    short * tmp = (ram + i);
     *tmp = 1420;
     i+=2;
     
@@ -34,6 +34,16 @@ int createRAM(unsigned char ** _ram)
     i++;
     ram[i] = 47;
     i++;
+    
+    
+    //instruction 3(LD HL **)
+    ram[i] = 0x31;
+    i++;
+    tmp = (ram + i);
+    *tmp = 1793;
+    i+=2;
+    
+    
     
     //instruction 3(HALT)
     ram[i] = 0x76;
