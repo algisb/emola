@@ -2,10 +2,10 @@
 #define REGISTER_H_
 struct Regs
 {
-    union
-    {
-        struct
-        {
+//     union
+//     {
+//         struct
+//         {
             union
             {   
                 unsigned short AF;
@@ -51,9 +51,9 @@ struct Regs
             
             unsigned char IR; //Instruction register
             
-        };
-        
-    };
+//         };
+//         
+//     };
     
 };
 typedef struct Regs Regs;

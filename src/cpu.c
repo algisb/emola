@@ -10,6 +10,30 @@ struct CPU
     unsigned int cycles;
 };
 
+
+
+struct Opcode
+{
+        unsigned char data;
+        
+        unsigned char x : 2;
+        unsigned char y : 3;
+        unsigned char p : 2;
+        unsigned char q : 1;
+        unsigned char z : 3;
+};
+
+const unsigned char xMask = 0b11000000;
+const unsigned char yMask = 0b00111000;
+const unsigned char pMask = 0b00110000;
+const unsigned char qMask = 0b00001000;
+const unsigned char zMask = 0b00000111;
+
+
+
+typedef struct Regs Regs;
+
+
 #define SHOW_DEBUG_INFO
 
 #ifdef SHOW_DEBUG_INFO
@@ -32,7 +56,21 @@ int destroyCPU(CPU ** _cpu)
     return 0;
 }
 
-int fetchInst(CPU * _cpu, unsigned char * _memory)
+static Opcode decodeOp(unsigned char _op)
+{
+    Opcode opcode;
+    opcode.data = _op;
+    //NOTE: needs to use the disassembly info in: https://gb-archive.github.io/salvage/decoding_gbz80_opcodes/Decoding%20Gamboy%20Z80%20Opcodes.html  to decode the opcode
+    opcode.x = (_op & xMask) >> 6;
+    opcode.y = (_op & yMask) >> 3;
+    opcode.p = (_op & pMask) >> 4;
+    opcode.q = (_op & qMask) >> 3;
+    opcode.z = (_op & zMask);
+    
+    return opcode;
+}
+
+static int fetchByte(CPU * _cpu, unsigned char * _memory)
 {
     _cpu->regs.IR = _memory[_cpu->regs.PC];
     
@@ -46,11 +84,11 @@ int fetchInst(CPU * _cpu, unsigned char * _memory)
 int feDeExInst(CPU * _cpu, unsigned char * _memory)
 {
     Regs * regs = &_cpu->regs;
-    fetchInst(_cpu, _memory);
+    fetchByte(_cpu, _memory);
     if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
     {
         _cpu->regs.PC += 1;
-        fetchInst(_cpu, _memory);//fetch another instruction as prefix byte was present
+        fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
         switch(_cpu->regs.IR)
         {
             
@@ -58,151 +96,42 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
     }
     else
     {
-        switch(_cpu->regs.IR)
-        {
-            case 0x00:
-            {
-                PRINT_INSTRUCTION("NOP\n");
-                _cpu->regs.PC += 1;
-                break;
-            }
-            case 0x76:
-            {
-                PRINT_INSTRUCTION("HALT\n");
-                _cpu->regs.PC += 1;
-                
-                printf("reg B data: %d\n", regs->B);
-                printf("reg H data: %d\n", regs->H);
-                
-                printf("reg HL data: %d\n", regs->HL);
-                
-                printf("data at address 1420: %d\n", _memory[1420]);
-                
-                printf("reg SP data: %d\n", regs->SP);
-                while(1)//wait for interrupt or reset
-                {
-                    
-                }
-
-            }
-            
+        Opcode opcode = decodeOp(0b11000000/*_cpu->regs.IR*/);
+        
+        
+        printf("data: %d\n", opcode.data);
+        printf("x: %d\n", opcode.x);
+        printf("y: %d\n", opcode.y);
+        printf("z: %d\n", opcode.z);
+        printf("p: %d\n", opcode.p);
+        printf("q: %d\n", opcode.q);
+        
             //8 bit loads---------------------------------------------------------------------------------
-            case 0x3E:
-            {
-                PRINT_INSTRUCTION("LD A *\n");
-                regs->A = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x06:
-            {
-                PRINT_INSTRUCTION("LD B *\n");
-                regs->B = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x0E:
-            {
-                PRINT_INSTRUCTION("LD C *\n");
-                regs->C = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x16:
-            {
-                PRINT_INSTRUCTION("LD D *\n");
-                regs->D = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x1E:
-            {
-                PRINT_INSTRUCTION("LD E *\n");
-                regs->E = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x26:
-            {
-                PRINT_INSTRUCTION("LD H *\n");
-                regs->H = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x2E:
-            {
-                PRINT_INSTRUCTION("LD L *\n");
-                regs->L = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
-            case 0x36:
-            {
-                PRINT_INSTRUCTION("LD (HL) *\n");
-                _memory[_cpu->regs.HL] = _memory[regs->PC + 1];
-                _cpu->regs.PC += 2;
-                _cpu->cycles += 8;
-                break;
-            }
+//             case 0x3E:
+//             {
+//                 PRINT_INSTRUCTION("LD A *\n");
+//                 regs->A = _memory[regs->PC + 1];//access the immediate memory going after the instruction
+//                 _cpu->regs.PC += 2;
+//                 _cpu->cycles += 8;
+//                 break;
+//             }
+    
             
             //16 bit loads---------------------------------------------------------------------------------
-            case 0x01:
-            {
-                PRINT_INSTRUCTION("LD BC **\n");
-                _cpu->regs.L = _memory[regs->PC + 1];
-                _cpu->regs.D = _memory[regs->PC + 2];
+//             case 0x01:
+//             {
+//                 PRINT_INSTRUCTION("LD BC **\n");
+//                 _cpu->regs.L = _memory[regs->PC + 1];
+//                 _cpu->regs.D = _memory[regs->PC + 2];
+//                 
+//                 _cpu->regs.PC += 3;
+//                 _cpu->cycles += 12;
+//                 break;
+//             }
+        
+            while(1);//remove to continue execution
+                //printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
                 
-                _cpu->regs.PC += 3;
-                _cpu->cycles += 12;
-                break;
-            }
-            
-            case 0x11:
-            {
-                PRINT_INSTRUCTION("LD DE **\n");
-                _cpu->regs.D = _memory[regs->PC + 1];
-                _cpu->regs.E = _memory[regs->PC + 2];
-                
-                _cpu->regs.PC += 3;
-                _cpu->cycles += 12;
-                
-                break;
-            }
-            
-            case 0x21:
-            {
-                PRINT_INSTRUCTION("LD HL **\n");
-                _cpu->regs.H = _memory[regs->PC + 1];
-                _cpu->regs.L = _memory[regs->PC + 2];
-                
-                _cpu->regs.PC += 3;
-                _cpu->cycles += 12;
-                break;
-            }
-            
-            case 0x31:
-            {
-                PRINT_INSTRUCTION("LD SP **\n");
-                memcpy(&_cpu->regs.SP, &_memory[regs->PC + 1], 2);
-                
-                _cpu->regs.PC += 3;
-                _cpu->cycles += 12;
-                break;
-            }
-            
-            
-            default:
-                printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
-                _cpu->regs.IR = 0x76;
-                
-        }
     }
     return 0;
 }

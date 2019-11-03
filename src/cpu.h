@@ -4,10 +4,11 @@
 struct CPU;
 typedef struct CPU CPU;
 
+struct Opcode;
+typedef struct Opcode Opcode;
 
 int createCPU(CPU ** _cpu);
 int destroyCPU(CPU ** _cpu);
 int feDeExInst(CPU * _cpu, unsigned char * _memory);
-int decodeExecInst(CPU * _cpu, unsigned char * _memory);
 
 #endif

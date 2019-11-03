@@ -11,37 +11,37 @@ int createRAM(unsigned char ** _ram)
     //instruction 1 (NOP)
     ram[i] = 0x00;
     i++;
-    //instruction 1(LD B 69)
-    ram[i] = 0x06;
-    i++;
-    ram[i] = 69;
-    i++;
-    //instruction 2(LD H 69)
-    ram[i] = 0x26;
-    i++;
-    ram[i] = 69;
-    i++;
-    
-    //instruction 3(LD HL **)
-    ram[i] = 0x21;
-    i++;
-    short * tmp = (ram + i);
-    *tmp = 1420;
-    i+=2;
-    
-    //instruction 4 (LD (HL) *)
-    ram[i] = 0x36;
-    i++;
-    ram[i] = 47;
-    i++;
-    
-    
-    //instruction 3(LD HL **)
-    ram[i] = 0x31;
-    i++;
-    tmp = (ram + i);
-    *tmp = 1793;
-    i+=2;
+//     //instruction 1(LD B 69)
+//     ram[i] = 0x06;
+//     i++;
+//     ram[i] = 69;
+//     i++;
+//     //instruction 2(LD H 69)
+//     ram[i] = 0x26;
+//     i++;
+//     ram[i] = 69;
+//     i++;
+//     
+//     //instruction 3(LD HL **)
+//     ram[i] = 0x21;
+//     i++;
+//     short * tmp = (ram + i);
+//     *tmp = 1420;
+//     i+=2;
+//     
+//     //instruction 4 (LD (HL) *)
+//     ram[i] = 0x36;
+//     i++;
+//     ram[i] = 47;
+//     i++;
+//     
+//     
+//     //instruction 3(LD HL **)
+//     ram[i] = 0x31;
+//     i++;
+//     tmp = (ram + i);
+//     *tmp = 1793;
+//     i+=2;
     
     
     
