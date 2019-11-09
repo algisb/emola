@@ -106,6 +106,7 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
         printf("p: %d\n", opcode.p);
         printf("q: %d\n", opcode.q);
         
+
             //8 bit loads---------------------------------------------------------------------------------
 //             case 0x3E:
 //             {

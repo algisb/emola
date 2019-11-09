@@ -11,8 +11,8 @@ struct Regs
                 unsigned short AF;
                 struct
                 {
-                    unsigned char A; //Hi
                     unsigned char F; //Flag register
+                    unsigned char A; //Hi
                 };
             };
             
@@ -21,8 +21,8 @@ struct Regs
                 unsigned short BC;
                 struct
                 {
-                    unsigned char B;
                     unsigned char C;
+                    unsigned char B;
                 };
                 
             };
@@ -31,8 +31,8 @@ struct Regs
                 unsigned short DE;
                 struct
                 {
-                    unsigned char D;
                     unsigned char E;
+                    unsigned char D;
                 };
             };
             union
@@ -40,8 +40,8 @@ struct Regs
                 unsigned short HL;
                 struct
                 {
-                    unsigned char H;
                     unsigned char L;
+                    unsigned char H;
                 };
             };
             
