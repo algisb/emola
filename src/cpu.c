@@ -8,6 +8,11 @@ struct CPU
 {
     Regs regs;
     unsigned int cycles;
+    
+    //disassembly tables
+    const unsigned char * rtable[8];
+    const unsigned short * rptable[4];
+    const unsigned short * rp2table[4];
 };
 
 
@@ -29,6 +34,8 @@ const unsigned char pMask = 0b00110000;
 const unsigned char qMask = 0b00001000;
 const unsigned char zMask = 0b00000111;
 
+//disassembly tables
+
 
 
 typedef struct Regs Regs;
@@ -47,6 +54,7 @@ printf(_str)
 int createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
+    createDisTables(*_cpu);
     return 0;
 }
 
@@ -134,6 +142,14 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 //printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
                 
     }
+    return 0;
+}
+
+int createDisTables(CPU* _cpu)
+{
+    //TODO:
+    _cpu->rtable[0] = 0;
+    //_cpu->rtable = {0,0,0,0,0,0,0,0};
     return 0;
 }
 
