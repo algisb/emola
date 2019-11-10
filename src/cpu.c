@@ -10,7 +10,7 @@ struct CPU
     unsigned int cycles;
     
     //disassembly tables
-    const unsigned char * rtable[8];
+    const void * rtable[8];
     const unsigned short * rptable[4];
     const unsigned short * rp2table[4];
 };
@@ -147,9 +147,13 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
 
 int createDisTables(CPU* _cpu)
 {
-    //TODO:
-    _cpu->rtable[0] = 0;
-    //_cpu->rtable = {0,0,0,0,0,0,0,0};
+    const void * rtable[8] = {&_cpu->regs.B, &_cpu->regs.C, &_cpu->regs.D, &_cpu->regs.E,  &_cpu->regs.H ,&_cpu->regs.L , &_cpu->regs.HL, &_cpu->regs.A};
+    //TODO:                                                                                                                                                                                                         ^ - this one will need specia treatment as it refers to the byte pointed by (HL)
+    memcpy(_cpu->rtable,  rtable, sizeof(rtable));
+    const unsigned short * rptable[4] = {&_cpu->regs.BC, &_cpu->regs.DE, &_cpu->regs.HL, &_cpu->regs.SP};
+    memcpy(_cpu->rptable,  rptable, sizeof(rptable));
+    memcpy(_cpu->rp2table,  rptable, sizeof(rptable));
+    _cpu->rp2table[3] = &_cpu->regs.AF;
     return 0;
 }
 
