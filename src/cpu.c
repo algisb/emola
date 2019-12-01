@@ -127,6 +127,8 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 0:
                             {
                                 PRINT_DEBUG("NOP\n");
+                                _cpu->regs.SP = 911;
+                                
                                 _cpu->cycles += 4;
                                 _cpu->regs.PC += 1;
                                 break;
@@ -134,10 +136,18 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 1:
                             {
                                 PRINT_DEBUG("LD (nn) SP\n");
-                                unsigned short * loc = (unsigned short *)(&_memory[regs->PC + 1]);
-                                *loc = _cpu->regs.SP;
+                                unsigned short * loc0 = (unsigned short *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
+                                unsigned short * loc1 = (unsigned short *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
+                                *loc1 = _cpu->regs.SP;
                                 _cpu->cycles += 20;
                                 _cpu->regs.PC += 3;
+                                break;
+                            }
+                            case 2:
+                            {
+                                PRINT_DEBUG("STOP\n");
+                                _cpu->cycles += 4;
+                                _cpu->regs.PC += 2;
                                 break;
                             }
                             default:
@@ -170,6 +180,14 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 6:
                             {
                                 PRINT_DEBUG("HALT\n");
+                                
+                                
+                                unsigned short * loc0 = (unsigned short *)&_memory[69];
+                                printf("DATA IN MEM LOC 69: %d\n", *loc0);
+                                
+                                
+                                
+                                
                                 _cpu->cycles += 4;
                                 _cpu->regs.PC += 1;
                                 while(1);
