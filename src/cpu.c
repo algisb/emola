@@ -150,6 +150,17 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 _cpu->regs.PC += 2;
                                 break;
                             }
+                            
+                            case 3:
+                            {
+                                PRINT_DEBUG("JN d\n");
+                                char * loc0 = (char *)(&_memory[_cpu->regs.PC + 1]);
+                                _cpu->regs.PC += 2;
+                                
+                                _cpu->regs.PC += *loc0;
+                                _cpu->cycles += 12;
+                                break;
+                            }
                             default:
                             {
                                 printf("Error: unhandled opcode x: %d z: %d (y: %d)\n", opcode.x, opcode.z, opcode.y);

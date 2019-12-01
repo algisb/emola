@@ -17,8 +17,11 @@ int createRAM(unsigned char ** _ram)
     unsigned short * tmp = (unsigned short*)(ram + i);
     *tmp = 69;
     i+=2;
-    
-    
+    //instruction 3 (JR d)
+    ram[i] = 0x18;
+    i++;
+    ram[i] = -6;
+    i++;
     
     //instruction 3(HALT)
     ram[i] = 0x76;
