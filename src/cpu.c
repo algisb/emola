@@ -28,6 +28,15 @@ struct Opcode
         unsigned char z : 3;
 };
 
+enum Flag
+{
+    NZ,
+    Z,
+    NC,
+    C    
+};
+typedef enum Flag Flag;
+
 const unsigned char xMask = 0b11000000;
 const unsigned char yMask = 0b00111000;
 const unsigned char pMask = 0b00110000;
@@ -50,18 +59,26 @@ printf(_str)
 #define PRINT_DEBUG(_str)
 #endif
 
+static void createDisTables(CPU* _cpu)
+{
+    const void * rtable[8] = {&_cpu->regs.B, &_cpu->regs.C, &_cpu->regs.D, &_cpu->regs.E,  &_cpu->regs.H ,&_cpu->regs.L , &_cpu->regs.HL, &_cpu->regs.A};
+    //TODO:                                                                                                                                                                                                         ^ - this one will need specia treatment as it refers to the byte pointed by (HL)
+    memcpy(_cpu->rtable,  rtable, sizeof(rtable));
+    const unsigned short * rptable[4] = {&_cpu->regs.BC, &_cpu->regs.DE, &_cpu->regs.HL, &_cpu->regs.SP};
+    memcpy(_cpu->rptable,  rptable, sizeof(rptable));
+    memcpy(_cpu->rp2table,  rptable, sizeof(rptable));
+    _cpu->rp2table[3] = &_cpu->regs.AF;
+}
 
-int createCPU(CPU ** _cpu)
+void createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
     createDisTables(*_cpu);
-    return 0;
 }
 
-int destroyCPU(CPU ** _cpu)
+void destroyCPU(CPU ** _cpu)
 {
     free(*_cpu);
-    return 0;
 }
 
 static Opcode decodeOp(unsigned char _op)
@@ -89,7 +106,21 @@ static int fetchByte(CPU * _cpu, unsigned char * _memory)
     return 0;
 }
 
-int feDeExInst(CPU * _cpu, unsigned char * _memory)
+static int getFlag(CPU * _cpu, Flag _flag)
+{
+    switch(_flag)
+    {
+        case NZ:
+            return (_cpu->regs.F & 0b10000000) >> 7;
+        case Z:
+            return (_cpu->regs.F & 0b01000000) >> 6;
+        case NC:
+            return (_cpu->regs.F & 0b00100000) >> 5;
+        case C:
+            return (_cpu->regs.F & 0b00010000) >> 4;
+    }
+}
+void feDeExInst(CPU * _cpu, unsigned char * _memory)
 {
     Regs * regs = &_cpu->regs;
     fetchByte(_cpu, _memory);
@@ -266,19 +297,6 @@ int feDeExInst(CPU * _cpu, unsigned char * _memory)
                 //printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
                 
     }
-    return 0;
-}
-
-int createDisTables(CPU* _cpu)
-{
-    const void * rtable[8] = {&_cpu->regs.B, &_cpu->regs.C, &_cpu->regs.D, &_cpu->regs.E,  &_cpu->regs.H ,&_cpu->regs.L , &_cpu->regs.HL, &_cpu->regs.A};
-    //TODO:                                                                                                                                                                                                         ^ - this one will need specia treatment as it refers to the byte pointed by (HL)
-    memcpy(_cpu->rtable,  rtable, sizeof(rtable));
-    const unsigned short * rptable[4] = {&_cpu->regs.BC, &_cpu->regs.DE, &_cpu->regs.HL, &_cpu->regs.SP};
-    memcpy(_cpu->rptable,  rptable, sizeof(rptable));
-    memcpy(_cpu->rp2table,  rptable, sizeof(rptable));
-    _cpu->rp2table[3] = &_cpu->regs.AF;
-    return 0;
 }
 
 

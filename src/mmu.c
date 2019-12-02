@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "defs.h"
 
-int createRAM(unsigned char ** _ram)
+void createRAM(unsigned char ** _ram)
 {
     *_ram = (unsigned char*)calloc(RAM_SIZE, 1);
     unsigned char * ram = *_ram;
@@ -33,9 +33,6 @@ int createRAM(unsigned char ** _ram)
     printf("\n");
     printf("-------------------------------\n");
     
-    
-    
-    
-    return 0;
+
 }
 
