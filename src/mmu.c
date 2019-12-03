@@ -18,7 +18,7 @@ void createRAM(unsigned char ** _ram)
     *tmp = 69;
     i+=2;
     //instruction 3 (JR d)
-    ram[i] = 0x18;
+    ram[i] = 0x28;
     i++;
     ram[i] = -6;
     i++;

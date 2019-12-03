@@ -30,12 +30,21 @@ struct Opcode
 
 enum Flag
 {
+    F_Z,
+    F_N,
+    F_H,
+    F_C    
+};
+typedef enum Flag Flag;
+
+enum CC
+{
     NZ,
     Z,
     NC,
     C    
 };
-typedef enum Flag Flag;
+typedef enum CC CC;
 
 const unsigned char xMask = 0b11000000;
 const unsigned char yMask = 0b00111000;
@@ -95,7 +104,7 @@ static Opcode decodeOp(unsigned char _op)
     return opcode;
 }
 
-static int fetchByte(CPU * _cpu, unsigned char * _memory)
+static void fetchByte(CPU * _cpu, unsigned char * _memory)
 {
     _cpu->regs.IR = _memory[_cpu->regs.PC];
     
@@ -103,23 +112,30 @@ static int fetchByte(CPU * _cpu, unsigned char * _memory)
     {
         _cpu->regs.PC = 0;
     }
-    return 0;
 }
 
-static int getFlag(CPU * _cpu, Flag _flag)
+static unsigned char getFlag(const CPU * _cpu, Flag _flag)
 {
-    switch(_flag)
+    unsigned char mask = 0b10000000 >> _flag;
+    unsigned char nShift = 7 - _flag;
+    return (_cpu->regs.F & mask) >> nShift; 
+}
+
+static unsigned char getCC(const CPU * _cpu, CC _cc)
+{
+    switch(_cc)
     {
         case NZ:
-            return (_cpu->regs.F & 0b10000000) >> 7;
+            return !getFlag(_cpu, F_Z);
         case Z:
-            return (_cpu->regs.F & 0b01000000) >> 6;
+            return getFlag(_cpu, F_Z);
         case NC:
-            return (_cpu->regs.F & 0b00100000) >> 5;
+            return !getFlag(_cpu, F_C);
         case C:
-            return (_cpu->regs.F & 0b00010000) >> 4;
+            return getFlag(_cpu, F_C);
     }
 }
+
 void feDeExInst(CPU * _cpu, unsigned char * _memory)
 {
     Regs * regs = &_cpu->regs;
@@ -158,7 +174,12 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 0:
                             {
                                 PRINT_DEBUG("NOP\n");
+                                //TEST DUMMY VALUES
                                 _cpu->regs.SP = 911;
+                                _cpu->regs.F = 0b10000000;
+                                //TEST DUMMY VALUES
+                                
+                                
                                 
                                 _cpu->cycles += 4;
                                 _cpu->regs.PC += 1;
@@ -187,11 +208,32 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 PRINT_DEBUG("JN d\n");
                                 char * loc0 = (char *)(&_memory[_cpu->regs.PC + 1]);
                                 _cpu->regs.PC += 2;
-                                
                                 _cpu->regs.PC += *loc0;
                                 _cpu->cycles += 12;
                                 break;
                             }
+
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 7:
+                            {
+                                PRINT_DEBUG("JN cc[y-4] d\n");
+                                if(getCC(_cpu, opcode.y - 4))
+                                {
+                                    char * loc0 = (char *)(&_memory[_cpu->regs.PC + 1]);
+                                    _cpu->regs.PC += 2;
+                                    _cpu->regs.PC += *loc0;
+                                    _cpu->cycles += 12;
+                                }
+                                else
+                                {
+                                    _cpu->regs.PC += 2;
+                                    _cpu->cycles += 8;
+                                }
+                                break;
+                            }
+                            
                             default:
                             {
                                 printf("Error: unhandled opcode x: %d z: %d (y: %d)\n", opcode.x, opcode.z, opcode.y);
