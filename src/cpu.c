@@ -7,25 +7,25 @@
 struct CPU
 {
     Regs regs;
-    unsigned int cycles;
+    uint32_t cycles;
     
     //disassembly tables
-    const void * rtable[8];
-    const unsigned short * rptable[4];
-    const unsigned short * rp2table[4];
+    void * rtable[8];
+    uint16_t * rptable[4];
+    uint16_t * rp2table[4];
 };
 
 
 
 struct Opcode
 {
-        unsigned char data;
+        uint8_t data;
         
-        unsigned char x : 2;
-        unsigned char y : 3;
-        unsigned char p : 2;
-        unsigned char q : 1;
-        unsigned char z : 3;
+        uint8_t x : 2;
+        uint8_t y : 3;
+        uint8_t p : 2;
+        uint8_t q : 1;
+        uint8_t z : 3;
 };
 
 enum Flag
@@ -46,11 +46,11 @@ enum CC
 };
 typedef enum CC CC;
 
-const unsigned char xMask = 0b11000000;
-const unsigned char yMask = 0b00111000;
-const unsigned char pMask = 0b00110000;
-const unsigned char qMask = 0b00001000;
-const unsigned char zMask = 0b00000111;
+const uint8_t xMask = 0b11000000;
+const uint8_t yMask = 0b00111000;
+const uint8_t pMask = 0b00110000;
+const uint8_t qMask = 0b00001000;
+const uint8_t zMask = 0b00000111;
 
 //disassembly tables
 
@@ -73,7 +73,7 @@ static void createDisTables(CPU* _cpu)
     const void * rtable[8] = {&_cpu->regs.B, &_cpu->regs.C, &_cpu->regs.D, &_cpu->regs.E,  &_cpu->regs.H ,&_cpu->regs.L , &_cpu->regs.HL, &_cpu->regs.A};
     //TODO:                                                                                                                                                                                                         ^ - this one will need specia treatment as it refers to the byte pointed by (HL)
     memcpy(_cpu->rtable,  rtable, sizeof(rtable));
-    const unsigned short * rptable[4] = {&_cpu->regs.BC, &_cpu->regs.DE, &_cpu->regs.HL, &_cpu->regs.SP};
+    const uint16_t * rptable[4] = {&_cpu->regs.BC, &_cpu->regs.DE, &_cpu->regs.HL, &_cpu->regs.SP};
     memcpy(_cpu->rptable,  rptable, sizeof(rptable));
     memcpy(_cpu->rp2table,  rptable, sizeof(rptable));
     _cpu->rp2table[3] = &_cpu->regs.AF;
@@ -90,7 +90,7 @@ void destroyCPU(CPU ** _cpu)
     free(*_cpu);
 }
 
-static Opcode decodeOp(unsigned char _op)
+static Opcode decodeOp(uint8_t _op)
 {
     Opcode opcode;
     opcode.data = _op;
@@ -104,7 +104,7 @@ static Opcode decodeOp(unsigned char _op)
     return opcode;
 }
 
-static void fetchByte(CPU * _cpu, unsigned char * _memory)
+static void fetchByte(CPU * _cpu, uint8_t * _memory)
 {
     _cpu->regs.IR = _memory[_cpu->regs.PC];
     
@@ -114,14 +114,14 @@ static void fetchByte(CPU * _cpu, unsigned char * _memory)
     }
 }
 
-static unsigned char getFlag(const CPU * _cpu, Flag _flag)
+static uint8_t getFlag(const CPU * _cpu, Flag _flag)
 {
-    unsigned char mask = 0b10000000 >> _flag;
-    unsigned char nShift = 7 - _flag;
+    uint8_t mask = 0b10000000 >> _flag;
+    uint8_t nShift = 7 - _flag;
     return (_cpu->regs.F & mask) >> nShift; 
 }
 
-static unsigned char getCC(const CPU * _cpu, CC _cc)
+static uint8_t getCC(const CPU * _cpu, CC _cc)
 {
     switch(_cc)
     {
@@ -136,7 +136,7 @@ static unsigned char getCC(const CPU * _cpu, CC _cc)
     }
 }
 
-void feDeExInst(CPU * _cpu, unsigned char * _memory)
+void feDeExInst(CPU * _cpu, uint8_t * _memory)
 {
     Regs * regs = &_cpu->regs;
     fetchByte(_cpu, _memory);
@@ -176,7 +176,7 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 PRINT_DEBUG("NOP\n");
                                 //TEST DUMMY VALUES
                                 _cpu->regs.SP = 911;
-                                _cpu->regs.F = 0b10000000;
+                                _cpu->regs.F = 0b00000000;//first bit controls the relative jump
                                 //TEST DUMMY VALUES
                                 
                                 
@@ -188,8 +188,8 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 1:
                             {
                                 PRINT_DEBUG("LD (nn) SP\n");
-                                unsigned short * loc0 = (unsigned short *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
-                                unsigned short * loc1 = (unsigned short *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
+                                uint16_t * loc0 = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
+                                uint16_t * loc1 = (uint16_t *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
                                 *loc1 = _cpu->regs.SP;
                                 _cpu->cycles += 20;
                                 _cpu->regs.PC += 3;
@@ -206,7 +206,7 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                             case 3:
                             {
                                 PRINT_DEBUG("JN d\n");
-                                char * loc0 = (char *)(&_memory[_cpu->regs.PC + 1]);
+                                int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
                                 _cpu->regs.PC += 2;
                                 _cpu->regs.PC += *loc0;
                                 _cpu->cycles += 12;
@@ -221,7 +221,7 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 PRINT_DEBUG("JN cc[y-4] d\n");
                                 if(getCC(_cpu, opcode.y - 4))
                                 {
-                                    char * loc0 = (char *)(&_memory[_cpu->regs.PC + 1]);
+                                    int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
                                     _cpu->regs.PC += 2;
                                     _cpu->regs.PC += *loc0;
                                     _cpu->cycles += 12;
@@ -240,6 +240,25 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 break;
                             }
                         }
+                        break;
+                    }
+                    
+                    case 1:
+                    {
+                        switch(opcode.q)
+                        {
+                            case 0:
+                            {
+                                PRINT_DEBUG("LD rp[p] nn\n");
+                                uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                                *(_cpu->rptable[opcode.p]) = *loc;
+                                
+                                _cpu->regs.PC += 3;
+                                _cpu->cycles += 12;
+                                break;
+                            }
+                        }
+                        
                         break;
                     }
                     
@@ -266,9 +285,9 @@ void feDeExInst(CPU * _cpu, unsigned char * _memory)
                                 PRINT_DEBUG("HALT\n");
                                 
                                 
-                                unsigned short * loc0 = (unsigned short *)&_memory[69];
-                                printf("DATA IN MEM LOC 69: %d\n", *loc0);
-                                
+                                uint16_t * loc0 = (uint16_t *)&_memory[69];
+                                printf("data in mem loc 69: %d\n", *loc0);
+                                printf("data in HL: %d\n", regs->HL);
                                 
                                 
                                 

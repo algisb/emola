@@ -3,10 +3,11 @@
 #include <stdio.h>
 #include "defs.h"
 
-void createRAM(unsigned char ** _ram)
+void createRAM(uint8_t ** _ram)
 {
-    *_ram = (unsigned char*)calloc(RAM_SIZE, 1);
-    unsigned char * ram = *_ram;
+    *_ram = (uint8_t*)calloc(RAM_SIZE, 1);
+    uint8_t * ram = *_ram;
+    uint16_t * tmp_uint16; 
     int i = 0;
     //instruction 1 (NOP)
     ram[i] = 0x00;
@@ -14,8 +15,8 @@ void createRAM(unsigned char ** _ram)
     //instruction 2 (LD (**) SP) 
     ram[i] = 0x08;
     i++;
-    unsigned short * tmp = (unsigned short*)(ram + i);
-    *tmp = 69;
+    tmp_uint16 = (uint16_t*)(ram + i);
+    *tmp_uint16 = 69;
     i+=2;
     //instruction 3 (JR d)
     ram[i] = 0x28;
@@ -23,7 +24,14 @@ void createRAM(unsigned char ** _ram)
     ram[i] = -6;
     i++;
     
-    //instruction 3(HALT)
+    //instruction 4 LD HL dd
+    ram[i] = 0x21;
+    i++;
+    tmp_uint16 = (uint16_t*)(ram + i);
+    *tmp_uint16 = 799;
+    i+=2;
+    
+    //HALT
     ram[i] = 0x76;
     i++;
     

@@ -1,6 +1,8 @@
 #ifndef MMU_H_
 #define MMU_H_
-void createRAM(unsigned char ** _ram);
+#include <stdint.h>
+
+void createRAM(uint8_t ** _ram);
 
 
 #endif

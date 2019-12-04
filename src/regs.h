@@ -1,60 +1,53 @@
 #ifndef REGISTER_H_
 #define REGISTER_H_
+#include <stdint.h>
 struct Regs
 {
-//     union
-//     {
-//         struct
-//         {
-            union
-            {   
-                unsigned short AF;
-                struct
-                {
-                    unsigned char F; //Flag register
-                    unsigned char A; //Hi
-                };
-            };
-            
-            union
-            {
-                unsigned short BC;
-                struct
-                {
-                    unsigned char C;
-                    unsigned char B;
-                };
-                
-            };
-            union
-            {
-                unsigned short DE;
-                struct
-                {
-                    unsigned char E;
-                    unsigned char D;
-                };
-            };
-            union
-            {
-                unsigned short HL;
-                struct
-                {
-                    unsigned char L;
-                    unsigned char H;
-                };
-            };
-            
-            unsigned short SP; //Stack pointer
-            
-            unsigned short PC; //Program counter
-            
-            unsigned char IR; //Instruction register
-            
-//         };
-//         
-//     };
-    
+    union
+    {   
+        uint16_t AF;
+        struct
+        {
+            uint8_t F; //Flag register
+            uint8_t A; //Hi
+        };
+    };
+
+    union
+    {
+        uint16_t BC;
+        struct
+        {
+            uint8_t C;
+            uint8_t B;
+        };
+        
+    };
+    union
+    {
+        uint16_t DE;
+        struct
+        {
+            uint8_t E;
+            uint8_t D;
+        };
+    };
+    union
+    {
+        uint16_t HL;
+        struct
+        {
+            uint8_t L;
+            uint8_t H;
+        };
+    };
+
+    uint16_t SP; //Stack pointer
+
+    uint16_t PC; //Program counter
+
+    uint8_t IR; //Instruction register
+
 };
 typedef struct Regs Regs;
 
