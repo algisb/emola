@@ -120,6 +120,17 @@ static uint8_t getFlag(const CPU * _cpu, Flag _flag)
     uint8_t nShift = 7 - _flag;
     return (_cpu->regs.F & mask) >> nShift; 
 }
+static void setFlag(CPU * _cpu, Flag _flag)
+{
+    uint8_t mask = 0b10000000 >> _flag;
+    _cpu->regs.F  |= mask; 
+}
+
+static void resetFlag(CPU * _cpu, Flag _flag)
+{
+    uint8_t mask = 0b10000000 >> _flag;
+    _cpu->regs.F  &= ~(mask); 
+}
 
 static uint8_t getCC(const CPU * _cpu, CC _cc)
 {
@@ -255,6 +266,38 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 
                                 _cpu->regs.PC += 3;
                                 _cpu->cycles += 12;
+                                break;
+                            }
+                            
+                            case 1:
+                            {
+                                PRINT_DEBUG("ADD HL rp[p]\n");
+                                _cpu->regs.HL += *(_cpu->rptable[opcode.p]) ;
+                                resetFlag(_cpu, F_N);
+                                
+                                //process half carry flag
+                                if (  ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0  )
+                                {
+                                    setFlag(_cpu, F_H);
+                                }
+                                else
+                                {
+                                    resetFlag(_cpu, F_H);
+                                }
+                                //process carry flag
+                                
+                                if (  ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00  )
+                                {
+                                    setFlag(_cpu, F_H);
+                                }
+                                else
+                                {
+                                    resetFlag(_cpu, F_H);
+                                }
+                                
+                                
+                                _cpu->regs.PC += 1;
+                                _cpu->cycles += 8;
                                 break;
                             }
                         }
