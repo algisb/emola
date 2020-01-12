@@ -174,7 +174,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
         
         switch(opcode.x)
         {
-            case 0:
+            case 0://x=0
             {
                 switch(opcode.z)
                 {
@@ -188,6 +188,8 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 //TEST DUMMY VALUES
                                 _cpu->regs.SP = 911;
                                 _cpu->regs.F = 0b00000000;//first bit controls the relative jump
+                                
+                                _cpu->regs.A = 123;
                                 //TEST DUMMY VALUES
                                 
                                 
@@ -305,6 +307,47 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                         break;
                     }
                     
+                    case 2: //x=0 z=2
+                    {
+                        switch(opcode.q)
+                        {
+                            case 0:
+                            {
+                                switch(opcode.p)
+                                {
+                                    case 2:
+                                    {
+                                        PRINT_DEBUG("LD (HL+), A\n");
+                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                                        *loc0 = _cpu->regs.A;
+                                        _cpu->regs.HL++;
+                                        _cpu->regs.PC += 1;
+                                        _cpu->cycles += 8;
+                                        
+                                        break;
+                                    }
+                                    case 3:
+                                    {
+                                        printf("handled opcode p: %d \n", opcode.p);
+                                        break;
+                                    }
+                                    
+                                }
+                                break;
+                            }
+                            
+                            case 1:
+                            {
+                                
+                                break;
+                            }
+                            
+                        }
+                        break;   
+                    }
+                    
+                    
+                    
                     default:
                     {
                         printf("Error: unhandled opcode x: %d (z: %d)  y: %d)\n", opcode.x, opcode.z, opcode.y);
@@ -315,7 +358,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
             }
             
             
-            case 1:
+            case 1: //x=1
             {
                 switch(opcode.z)
                 {
@@ -331,7 +374,8 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 uint16_t * loc0 = (uint16_t *)&_memory[69];
                                 printf("data in mem loc 69: %d\n", *loc0);
                                 printf("data in HL: %d\n", regs->HL);
-                                
+                                uint8_t * loc1 = (uint8_t *)&_memory[799];
+                                printf("data in loc 799 %d\n", *loc1);
                                 
                                 
                                 _cpu->cycles += 4;
@@ -357,11 +401,11 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
             }
             
             
-            case 2:
+            case 2://x=2
             {
                 break;
             }
-            case 3:
+            case 3://x=3
             {
                 break;
             }

@@ -31,6 +31,11 @@ void createRAM(uint8_t ** _ram)
     *tmp_uint16 = 799;
     i+=2;
     
+    //instruction LD (HL+), A
+    ram[i] = 0x22;
+    i++;
+    
+    
     //HALT
     ram[i] = 0x76;
     i++;
