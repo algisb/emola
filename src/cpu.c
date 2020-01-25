@@ -68,6 +68,13 @@ printf(_str)
 #define PRINT_DEBUG(_str)
 #endif
 
+int logUnhandledOp (int _line, Opcode _opcode)
+{
+    printf("ERROR: unhandled opcode 0x%02x -> %s -> line: %d\n", _opcode.data, __FILE__, _line);
+    while(1);
+}
+#define LOG_ERROR_OP( opcode ) logUnhandledOp( __LINE__, opcode)
+
 static void createDisTables(CPU* _cpu)
 {
     const void * rtable[8] = {&_cpu->regs.B, &_cpu->regs.C, &_cpu->regs.D, &_cpu->regs.E,  &_cpu->regs.H ,&_cpu->regs.L , &_cpu->regs.HL, &_cpu->regs.A};
@@ -249,7 +256,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                             
                             default:
                             {
-                                printf("Error: unhandled opcode x: %d z: %d (y: %d)\n", opcode.x, opcode.z, opcode.y);
+                                LOG_ERROR_OP(opcode);
                                 break;
                             }
                         }
@@ -302,6 +309,11 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 _cpu->cycles += 8;
                                 break;
                             }
+                            default:
+                            {
+                                LOG_ERROR_OP(opcode);
+                                break;
+                            }
                         }
                         
                         break;
@@ -315,6 +327,26 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                             {
                                 switch(opcode.p)
                                 {
+                                    case 0:
+                                    {
+                                        PRINT_DEBUG("LD (BC), A\n");
+                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);//immediate data is a memory location, so we need to dereference
+                                        *loc0 = _cpu->regs.A;
+                                        _cpu->regs.PC += 1;
+                                        _cpu->cycles += 8;
+                                        break;
+                                    }
+                                    
+                                    case 1:
+                                    {
+                                        PRINT_DEBUG("LD (DE), A\n");
+                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.DE]);//immediate data is a memory location, so we need to dereference
+                                        *loc0 = _cpu->regs.A;
+                                        _cpu->regs.PC += 1;
+                                        _cpu->cycles += 8;
+                                        break;
+                                    }
+                                    
                                     case 2:
                                     {
                                         PRINT_DEBUG("LD (HL+), A\n");
@@ -323,12 +355,22 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                         _cpu->regs.HL++;
                                         _cpu->regs.PC += 1;
                                         _cpu->cycles += 8;
-                                        
                                         break;
                                     }
+                                    
                                     case 3:
                                     {
-                                        printf("handled opcode p: %d \n", opcode.p);
+                                        PRINT_DEBUG("LD (HL-), A\n");
+                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                                        *loc0 = _cpu->regs.A;
+                                        _cpu->regs.HL--;
+                                        _cpu->regs.PC += 1;
+                                        _cpu->cycles += 8;
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        LOG_ERROR_OP(opcode);
                                         break;
                                     }
                                     
@@ -338,7 +380,38 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                             
                             case 1:
                             {
-                                
+                                switch(opcode.p)
+                                {
+//                                     case 0:
+//                                     {
+//                                         break;
+//                                     }
+//                                     case 1:
+//                                     {
+//                                         break;
+//                                     }
+//                                     case 2:
+//                                     {
+//                                         break;
+//                                     }
+//                                     case 3:
+//                                     {
+//                                         break;
+//                                     }
+                                    
+                                    default:
+                                    {
+                                        LOG_ERROR_OP(opcode);
+                                        break;
+                                    }
+                                    
+                                }
+                                break;
+                            }
+                            
+                            default:
+                            {
+                                LOG_ERROR_OP(opcode);
                                 break;
                             }
                             
@@ -350,7 +423,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                     
                     default:
                     {
-                        printf("Error: unhandled opcode x: %d (z: %d)  y: %d)\n", opcode.x, opcode.z, opcode.y);
+                        LOG_ERROR_OP(opcode);
                         break;
                     }
                 }
@@ -385,7 +458,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                             }
                             default:
                             {
-                                printf("Error: unhandled opcode x: %d z: %d (y: %d)\n", opcode.x, opcode.z, opcode.y);
+                                LOG_ERROR_OP(opcode);
                                 break;
                             }
                         }
@@ -393,7 +466,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                     }
                     default:
                     {
-                        printf("Error: unhandled opcode x: %d (z: %d)  y: %d)\n", opcode.x, opcode.z, opcode.y);
+                        LOG_ERROR_OP(opcode);
                         break;
                     }
                 }
@@ -412,7 +485,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
             
             default:
             {
-                printf("Error: unhandled opcode (x: %d) z: %d y: %d)\n", opcode.x, opcode.z, opcode.y);
+                LOG_ERROR_OP(opcode);
                 break;
             }
         }
