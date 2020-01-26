@@ -9,32 +9,43 @@ void createRAM(uint8_t ** _ram)
     uint8_t * ram = *_ram;
     uint16_t * tmp_uint16; 
     int i = 0;
-    //instruction 1 (NOP)
+    //NOP
     ram[i] = 0x00;
     i++;
-    //instruction 2 (LD (**) SP) 
+    //LD (**) SP 
     ram[i] = 0x08;
     i++;
     tmp_uint16 = (uint16_t*)(ram + i);
     *tmp_uint16 = 69;
     i+=2;
-    //instruction 3 (JR d)
+    //(JR d)
     ram[i] = 0x28;
     i++;
     ram[i] = -6;
     i++;
     
-    //instruction 4 LD HL dd
+    //LD HL dd
     ram[i] = 0x21;
     i++;
     tmp_uint16 = (uint16_t*)(ram + i);
     *tmp_uint16 = 799;
     i+=2;
     
-    //instruction LD (HL+), A
+    //LD (HL+), A
     ram[i] = 0x22;
     i++;
     
+    //LD A, (BC)
+    ram[i] = 0x0A;
+    i++;
+    
+    //inc D
+    ram[i] = 0x14;
+    i++;
+
+    //inc BC
+    ram[i] = 0x03;
+    i++;    
     
     //HALT
     ram[i] = 0x76;

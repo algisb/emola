@@ -86,6 +86,18 @@ static void createDisTables(CPU* _cpu)
     _cpu->rp2table[3] = &_cpu->regs.AF;
 }
 
+uint8_t * getRVal(CPU * _cpu, uint8_t * _memory, uint8_t _index)
+{
+    if(_index == 6)
+    {
+         return (uint8_t *)(&_memory[*(uint16_t*)(_cpu->rtable[_index])]);
+    }
+    else
+    {
+        return (uint8_t *)(_cpu->rtable[_index]);
+    }
+}
+
 void createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
@@ -181,11 +193,11 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
         
         switch(opcode.x)
         {
-            case 0://x=0
+            case 0://x
             {
                 switch(opcode.z)
                 {
-                    case 0:
+                    case 0://z
                     {
                         switch(opcode.y)
                         {
@@ -197,6 +209,11 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 _cpu->regs.F = 0b00000000;//first bit controls the relative jump
                                 
                                 _cpu->regs.A = 123;
+                                _cpu->regs.BC = 1073;
+                                _cpu->regs.D = 35;
+                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);
+                                *loc0 = 59;
+                                
                                 //TEST DUMMY VALUES
                                 
                                 
@@ -263,7 +280,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                         break;
                     }
                     
-                    case 1:
+                    case 1://z
                     {
                         switch(opcode.q)
                         {
@@ -285,25 +302,12 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 resetFlag(_cpu, F_N);
                                 
                                 //process half carry flag
-                                if (  ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0  )
-                                {
-                                    setFlag(_cpu, F_H);
-                                }
-                                else
-                                {
-                                    resetFlag(_cpu, F_H);
-                                }
+                                ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0 ? 
+                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                                
                                 //process carry flag
-                                
-                                if (  ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00  )
-                                {
-                                    setFlag(_cpu, F_H);
-                                }
-                                else
-                                {
-                                    resetFlag(_cpu, F_H);
-                                }
-                                
+                                ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00 ?
+                                setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                                 
                                 _cpu->regs.PC += 1;
                                 _cpu->cycles += 8;
@@ -319,96 +323,51 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                         break;
                     }
                     
-                    case 2: //x=0 z=2
+                    case 2: //z
                     {
-                        switch(opcode.q)
+                        switch(opcode.p)
                         {
                             case 0:
                             {
-                                switch(opcode.p)
-                                {
-                                    case 0:
-                                    {
-                                        PRINT_DEBUG("LD (BC), A\n");
-                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);//immediate data is a memory location, so we need to dereference
-                                        *loc0 = _cpu->regs.A;
-                                        _cpu->regs.PC += 1;
-                                        _cpu->cycles += 8;
-                                        break;
-                                    }
-                                    
-                                    case 1:
-                                    {
-                                        PRINT_DEBUG("LD (DE), A\n");
-                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.DE]);//immediate data is a memory location, so we need to dereference
-                                        *loc0 = _cpu->regs.A;
-                                        _cpu->regs.PC += 1;
-                                        _cpu->cycles += 8;
-                                        break;
-                                    }
-                                    
-                                    case 2:
-                                    {
-                                        PRINT_DEBUG("LD (HL+), A\n");
-                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
-                                        *loc0 = _cpu->regs.A;
-                                        _cpu->regs.HL++;
-                                        _cpu->regs.PC += 1;
-                                        _cpu->cycles += 8;
-                                        break;
-                                    }
-                                    
-                                    case 3:
-                                    {
-                                        PRINT_DEBUG("LD (HL-), A\n");
-                                        uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
-                                        *loc0 = _cpu->regs.A;
-                                        _cpu->regs.HL--;
-                                        _cpu->regs.PC += 1;
-                                        _cpu->cycles += 8;
-                                        break;
-                                    }
-                                    default:
-                                    {
-                                        LOG_ERROR_OP(opcode);
-                                        break;
-                                    }
-                                    
-                                }
+                                opcode.q == 0 ? PRINT_DEBUG("LD (BC), A\n") : PRINT_DEBUG("LD A, (BC)\n");
+                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);//immediate data is a memory location, so we need to dereference
+                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                                _cpu->regs.PC += 1;
+                                _cpu->cycles += 8;
                                 break;
                             }
                             
                             case 1:
                             {
-                                switch(opcode.p)
-                                {
-//                                     case 0:
-//                                     {
-//                                         break;
-//                                     }
-//                                     case 1:
-//                                     {
-//                                         break;
-//                                     }
-//                                     case 2:
-//                                     {
-//                                         break;
-//                                     }
-//                                     case 3:
-//                                     {
-//                                         break;
-//                                     }
-                                    
-                                    default:
-                                    {
-                                        LOG_ERROR_OP(opcode);
-                                        break;
-                                    }
-                                    
-                                }
+                                opcode.q == 0 ? PRINT_DEBUG("LD (DE), A\n") : PRINT_DEBUG("LD A, (DE)\n");
+                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.DE]);//immediate data is a memory location, so we need to dereference
+                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                                _cpu->regs.PC += 1;
+                                _cpu->cycles += 8;
                                 break;
                             }
                             
+                            case 2:
+                            {
+                                opcode.q == 0 ? PRINT_DEBUG("LD (HL+), A\n") : PRINT_DEBUG("LD A, (HL+)\n");
+                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                                _cpu->regs.HL++;
+                                _cpu->regs.PC += 1;
+                                _cpu->cycles += 8;
+                                break;
+                            }
+                            
+                            case 3:
+                            {
+                                opcode.q == 0 ? PRINT_DEBUG("LD (HL-), A\n") : PRINT_DEBUG("LD A, (HL-)\n");
+                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                                _cpu->regs.HL--;
+                                _cpu->regs.PC += 1;
+                                _cpu->cycles += 8;
+                                break;
+                            }
                             default:
                             {
                                 LOG_ERROR_OP(opcode);
@@ -420,6 +379,36 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                     }
                     
                     
+                    case 3://z
+                    {
+                        opcode.q == 0 ? PRINT_DEBUG("INC rp[p]\n") : PRINT_DEBUG("DEC rp[p]\n");
+                        uint16_t * v  = _cpu->rptable[opcode.p];
+                        opcode.q == 0 ? (*v)++ : (*v)--;
+                        _cpu->regs.PC += 1;
+                        _cpu->cycles += 8;
+                        break;  
+                    }
+                    
+                    case 4://z
+                    case 5://z
+                    {
+                        opcode.z == 4 ? PRINT_DEBUG("INC r[y]\n") : PRINT_DEBUG("DEC r[y]\n");
+                        uint8_t * v = getRVal(_cpu, _memory, opcode.y);
+                        
+                        //process flags
+                        *v == 0 ? setFlag(_cpu, F_Z) : resetFlag(_cpu, F_Z);
+                        opcode.z == 4 ? resetFlag(_cpu, F_N) : setFlag(_cpu, F_N);
+                        //process half carry flag
+                        ((*v & 0x000F) + 1) & 0x00F0 ? 
+                        setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                        
+                        //do the op
+                        opcode.z == 4 ? (*v)++ : (*v)--;
+                        
+                        _cpu->regs.PC += 1;
+                        opcode.y == 6 ? (_cpu->cycles += 12) : (_cpu->cycles += 4);
+                        break;
+                    }
                     
                     default:
                     {
@@ -431,7 +420,7 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
             }
             
             
-            case 1: //x=1
+            case 1: //x
             {
                 switch(opcode.z)
                 {
@@ -449,6 +438,8 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
                                 printf("data in HL: %d\n", regs->HL);
                                 uint8_t * loc1 = (uint8_t *)&_memory[799];
                                 printf("data in loc 799 %d\n", *loc1);
+                                printf("data in D %d\n", _cpu->regs.D);
+                                printf("dat in BC %d\n",  _cpu->regs.BC);
                                 
                                 
                                 _cpu->cycles += 4;
@@ -474,11 +465,11 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
             }
             
             
-            case 2://x=2
+            case 2://x
             {
                 break;
             }
-            case 3://x=3
+            case 3://x
             {
                 break;
             }
