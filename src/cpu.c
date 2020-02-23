@@ -166,23 +166,9 @@ static uint8_t getCC(const CPU * _cpu, CC _cc)
     }
 }
 
-void feDeExInst(CPU * _cpu, uint8_t * _memory)
+void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
 {
-    Regs * regs = &_cpu->regs;
-    fetchByte(_cpu, _memory);
-    if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
-    {
-        _cpu->regs.PC += 1;
-        fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
-        switch(_cpu->regs.IR)
-        {
-            
-        }
-    }
-    else
-    {
-        Opcode opcode = decodeOp(_cpu->regs.IR);
-        
+            Opcode opcode = decodeOp(_op);
         
 //         printf("data: %d\n", opcode.data);
 //         printf("x: %d\n", opcode.x);
@@ -191,325 +177,402 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
 //         printf("p: %d\n", opcode.p);
 //         printf("q: %d\n", opcode.q);
         
-        switch(opcode.x)
+    switch(opcode.x)
+    {
+        case 0://x
         {
-            case 0://x
+            switch(opcode.z)
             {
-                switch(opcode.z)
+                case 0://z
                 {
-                    case 0://z
+                    switch(opcode.y)
                     {
-                        switch(opcode.y)
+                        case 0:
                         {
-                            case 0:
-                            {
-                                PRINT_DEBUG("NOP\n");
-                                //TEST DUMMY VALUES
-                                _cpu->regs.SP = 911;
-                                _cpu->regs.F = 0b00000000;//first bit controls the relative jump
-                                
-                                _cpu->regs.A = 123;
-                                _cpu->regs.BC = 1073;
-                                _cpu->regs.D = 35;
-                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);
-                                *loc0 = 59;
-                                
-                                //TEST DUMMY VALUES
-                                
-                                
-                                
-                                _cpu->cycles += 4;
-                                _cpu->regs.PC += 1;
-                                break;
-                            }
-                            case 1:
-                            {
-                                PRINT_DEBUG("LD (nn) SP\n");
-                                uint16_t * loc0 = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
-                                uint16_t * loc1 = (uint16_t *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
-                                *loc1 = _cpu->regs.SP;
-                                _cpu->cycles += 20;
-                                _cpu->regs.PC += 3;
-                                break;
-                            }
-                            case 2:
-                            {
-                                PRINT_DEBUG("STOP\n");
-                                _cpu->cycles += 4;
-                                _cpu->regs.PC += 2;
-                                break;
-                            }
+                            PRINT_DEBUG("NOP\n");
+                            //TEST DUMMY VALUES
+                            _cpu->regs.SP = 911;
+                            _cpu->regs.F = 0b00000000;//first bit controls the relative jump
                             
-                            case 3:
+                            _cpu->regs.A = 123;
+                            _cpu->regs.BC = 1073;
+                            _cpu->regs.D = 35;
+                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);
+                            *loc0 = 59;
+                            
+                            //TEST DUMMY VALUES
+                            
+                            
+                            
+                            _cpu->cycles += 4;
+                            _cpu->regs.PC += 1;
+                            break;
+                        }
+                        case 1:
+                        {
+                            PRINT_DEBUG("LD (nn) SP\n");
+                            uint16_t * loc0 = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
+                            uint16_t * loc1 = (uint16_t *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
+                            *loc1 = _cpu->regs.SP;
+                            _cpu->cycles += 20;
+                            _cpu->regs.PC += 3;
+                            break;
+                        }
+                        case 2:
+                        {
+                            PRINT_DEBUG("STOP\n");
+                            _cpu->cycles += 4;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        
+                        case 3:
+                        {
+                            PRINT_DEBUG("JN d\n");
+                            int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            _cpu->regs.PC += 2;
+                            _cpu->regs.PC += *loc0;
+                            _cpu->cycles += 12;
+                            break;
+                        }
+
+                        case 4:
+                        case 5:
+                        case 6:
+                        case 7:
+                        {
+                            PRINT_DEBUG("JN cc[y-4] d\n");
+                            if(getCC(_cpu, opcode.y - 4))
                             {
-                                PRINT_DEBUG("JN d\n");
                                 int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
                                 _cpu->regs.PC += 2;
                                 _cpu->regs.PC += *loc0;
                                 _cpu->cycles += 12;
-                                break;
                             }
-
-                            case 4:
-                            case 5:
-                            case 6:
-                            case 7:
+                            else
                             {
-                                PRINT_DEBUG("JN cc[y-4] d\n");
-                                if(getCC(_cpu, opcode.y - 4))
-                                {
-                                    int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
-                                    _cpu->regs.PC += 2;
-                                    _cpu->regs.PC += *loc0;
-                                    _cpu->cycles += 12;
-                                }
-                                else
-                                {
-                                    _cpu->regs.PC += 2;
-                                    _cpu->cycles += 8;
-                                }
-                                break;
+                                _cpu->regs.PC += 2;
+                                _cpu->cycles += 8;
                             }
-                            
-                            default:
-                            {
-                                LOG_ERROR_OP(opcode);
-                                break;
-                            }
+                            break;
                         }
-                        break;
-                    }
-                    
-                    case 1://z
-                    {
-                        switch(opcode.q)
+                        
+                        default:
                         {
-                            case 0:
-                            {
-                                PRINT_DEBUG("LD rp[p] nn\n");
-                                uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
-                                *(_cpu->rptable[opcode.p]) = *loc;
-                                
-                                _cpu->regs.PC += 3;
-                                _cpu->cycles += 12;
-                                break;
-                            }
-                            
-                            case 1:
-                            {
-                                PRINT_DEBUG("ADD HL rp[p]\n");
-                                _cpu->regs.HL += *(_cpu->rptable[opcode.p]) ;
-                                resetFlag(_cpu, F_N);
-                                
-                                //process half carry flag
-                                ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0 ? 
-                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-                                
-                                //process carry flag
-                                ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00 ?
-                                setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
-                                
-                                _cpu->regs.PC += 1;
-                                _cpu->cycles += 8;
-                                break;
-                            }
-                            default:
-                            {
-                                LOG_ERROR_OP(opcode);
-                                break;
-                            }
+                            LOG_ERROR_OP(opcode);
+                            break;
                         }
-                        
-                        break;
                     }
-                    
-                    case 2: //z
-                    {
-                        switch(opcode.p)
-                        {
-                            case 0:
-                            {
-                                opcode.q == 0 ? PRINT_DEBUG("LD (BC), A\n") : PRINT_DEBUG("LD A, (BC)\n");
-                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);//immediate data is a memory location, so we need to dereference
-                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
-                                _cpu->regs.PC += 1;
-                                _cpu->cycles += 8;
-                                break;
-                            }
-                            
-                            case 1:
-                            {
-                                opcode.q == 0 ? PRINT_DEBUG("LD (DE), A\n") : PRINT_DEBUG("LD A, (DE)\n");
-                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.DE]);//immediate data is a memory location, so we need to dereference
-                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
-                                _cpu->regs.PC += 1;
-                                _cpu->cycles += 8;
-                                break;
-                            }
-                            
-                            case 2:
-                            {
-                                opcode.q == 0 ? PRINT_DEBUG("LD (HL+), A\n") : PRINT_DEBUG("LD A, (HL+)\n");
-                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
-                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
-                                _cpu->regs.HL++;
-                                _cpu->regs.PC += 1;
-                                _cpu->cycles += 8;
-                                break;
-                            }
-                            
-                            case 3:
-                            {
-                                opcode.q == 0 ? PRINT_DEBUG("LD (HL-), A\n") : PRINT_DEBUG("LD A, (HL-)\n");
-                                uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
-                                opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
-                                _cpu->regs.HL--;
-                                _cpu->regs.PC += 1;
-                                _cpu->cycles += 8;
-                                break;
-                            }
-                            default:
-                            {
-                                LOG_ERROR_OP(opcode);
-                                break;
-                            }
-                            
-                        }
-                        break;   
-                    }
-                    
-                    
-                    case 3://z
-                    {
-                        opcode.q == 0 ? PRINT_DEBUG("INC rp[p]\n") : PRINT_DEBUG("DEC rp[p]\n");
-                        uint16_t * v  = _cpu->rptable[opcode.p];
-                        opcode.q == 0 ? (*v)++ : (*v)--;
-                        _cpu->regs.PC += 1;
-                        _cpu->cycles += 8;
-                        break;  
-                    }
-                    
-                    case 4://z
-                    case 5://z
-                    {
-                        opcode.z == 4 ? PRINT_DEBUG("INC r[y]\n") : PRINT_DEBUG("DEC r[y]\n");
-                        uint8_t * v = getRVal(_cpu, _memory, opcode.y);
-                        
-                        //process flags
-                        *v == 0 ? setFlag(_cpu, F_Z) : resetFlag(_cpu, F_Z);
-                        opcode.z == 4 ? resetFlag(_cpu, F_N) : setFlag(_cpu, F_N);
-                        //process half carry flag
-                        ((*v & 0x000F) + 1) & 0x00F0 ? 
-                        setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-                        
-                        //do the op
-                        opcode.z == 4 ? (*v)++ : (*v)--;
-                        
-                        _cpu->regs.PC += 1;
-                        opcode.y == 6 ? (_cpu->cycles += 12) : (_cpu->cycles += 4);
-                        break;
-                    }
-                    
-                    default:
-                    {
-                        LOG_ERROR_OP(opcode);
-                        break;
-                    }
+                    break;
                 }
-                break;
-            }
-            
-            
-            case 1: //x
-            {
-                switch(opcode.z)
+                
+                case 1://z
                 {
-                    case 6:
+                    switch(opcode.q)
                     {
-                        switch(opcode.y)
+                        case 0:
                         {
-                            case 6:
-                            {
-                                PRINT_DEBUG("HALT\n");
-                                
-                                
-                                uint16_t * loc0 = (uint16_t *)&_memory[69];
-                                printf("data in mem loc 69: %d\n", *loc0);
-                                printf("data in HL: %d\n", regs->HL);
-                                uint8_t * loc1 = (uint8_t *)&_memory[799];
-                                printf("data in loc 799 %d\n", *loc1);
-                                printf("data in D %d\n", _cpu->regs.D);
-                                printf("dat in BC %d\n",  _cpu->regs.BC);
-                                
-                                
-                                _cpu->cycles += 4;
-                                _cpu->regs.PC += 1;
-                                while(1);
-                                break;
-                            }
-                            default:
-                            {
-                                LOG_ERROR_OP(opcode);
-                                break;
-                            }
+                            PRINT_DEBUG("LD rp[p] nn\n");
+                            uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                            *(_cpu->rptable[opcode.p]) = *loc;
+                            
+                            _cpu->regs.PC += 3;
+                            _cpu->cycles += 12;
+                            break;
                         }
-                        break;
+                        
+                        case 1:
+                        {
+                            PRINT_DEBUG("ADD HL rp[p]\n");
+                            _cpu->regs.HL += *(_cpu->rptable[opcode.p]) ;
+                            resetFlag(_cpu, F_N);
+                            
+                            //process half carry flag
+                            ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0 ? 
+                            setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                            
+                            //process carry flag
+                            ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00 ?
+                            setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
                     }
-                    default:
-                    {
-                        LOG_ERROR_OP(opcode);
-                        break;
-                    }
+                    
+                    break;
                 }
-                break;
+                
+                case 2: //z
+                {
+                    switch(opcode.p)
+                    {
+                        case 0:
+                        {
+                            opcode.q == 0 ? PRINT_DEBUG("LD (BC), A\n") : PRINT_DEBUG("LD A, (BC)\n");
+                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);//immediate data is a memory location, so we need to dereference
+                            opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        case 1:
+                        {
+                            opcode.q == 0 ? PRINT_DEBUG("LD (DE), A\n") : PRINT_DEBUG("LD A, (DE)\n");
+                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.DE]);//immediate data is a memory location, so we need to dereference
+                            opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        case 2:
+                        {
+                            opcode.q == 0 ? PRINT_DEBUG("LD (HL+), A\n") : PRINT_DEBUG("LD A, (HL+)\n");
+                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                            opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                            _cpu->regs.HL++;
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        case 3:
+                        {
+                            opcode.q == 0 ? PRINT_DEBUG("LD (HL-), A\n") : PRINT_DEBUG("LD A, (HL-)\n");
+                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.HL]);//immediate data is a memory location, so we need to dereference
+                            opcode.q == 0 ? (*loc0 = _cpu->regs.A) : (_cpu->regs.A = *loc0);
+                            _cpu->regs.HL--;
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                        
+                    }
+                    break;   
+                }
+                
+                
+                case 3://z
+                {
+                    opcode.q == 0 ? PRINT_DEBUG("INC rp[p]\n") : PRINT_DEBUG("DEC rp[p]\n");
+                    uint16_t * v  = _cpu->rptable[opcode.p];
+                    opcode.q == 0 ? (*v)++ : (*v)--;
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;  
+                }
+                
+                case 4://z
+                case 5://z
+                {
+                    opcode.z == 4 ? PRINT_DEBUG("INC r[y]\n") : PRINT_DEBUG("DEC r[y]\n");
+                    uint8_t * v = getRVal(_cpu, _memory, opcode.y);
+                    
+                    //process flags
+                    *v == 0 ? setFlag(_cpu, F_Z) : resetFlag(_cpu, F_Z);
+                    opcode.z == 4 ? resetFlag(_cpu, F_N) : setFlag(_cpu, F_N);
+                    //process half carry flag
+                    ((*v & 0x000F) + 1) & 0x00F0 ? 
+                    setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                    
+                    //do the op
+                    opcode.z == 4 ? (*v)++ : (*v)--;
+                    
+                    _cpu->regs.PC += 1;
+                    opcode.y == 6 ? (_cpu->cycles += 12) : (_cpu->cycles += 4);
+                    break;
+                }
+                
+                case 6://z
+                {
+                    PRINT_DEBUG("LD r[y], n\n");
+                    uint8_t * loc = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                    uint8_t * v = getRVal(_cpu, _memory, opcode.y);
+                    *v = *loc;
+                    
+                    _cpu->regs.PC += 2;
+                    opcode.y == 6 ? (_cpu->cycles += 12) : (_cpu->cycles += 8);
+                    break;
+                }
+                case 7://z
+                {
+                    switch(opcode.y)
+                    {
+                        case 0://y
+                        {
+                            PRINT_DEBUG("RLCA\n");
+                            uint8_t tmp = _cpu->regs.A & 0b10000000;
+                            tmp = tmp >> 7;
+                            _cpu->regs.A = _cpu->regs.A << 1;
+                            tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            _cpu->regs.A = (_cpu->regs.A & 0b11111110) | tmp;
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        case 1:
+                        {
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                
+                default:
+                {
+                    LOG_ERROR_OP(opcode);
+                    break;
+                }
             }
-            
-            
-            case 2://x
-            {
-                break;
-            }
-            case 3://x
-            {
-                break;
-            }
-            
-            default:
-            {
-                LOG_ERROR_OP(opcode);
-                break;
-            }
+            break;
         }
         
-
-            //8 bit loads---------------------------------------------------------------------------------
-//             case 0x3E:
-//             {
-//                 PRINT_DEBUG("LD A *\n");
-//                 regs->A = _memory[regs->PC + 1];//access the immediate memory going after the instruction
-//                 _cpu->regs.PC += 2;
-//                 _cpu->cycles += 8;
-//                 break;
-//             }
-    
-            
-            //16 bit loads---------------------------------------------------------------------------------
-//             case 0x01:
-//             {
-//                 PRINT_DEBUG("LD BC **\n");
-//                 _cpu->regs.L = _memory[regs->PC + 1];
-//                 _cpu->regs.D = _memory[regs->PC + 2];
-//                 
-//                 _cpu->regs.PC += 3;
-//                 _cpu->cycles += 12;
-//                 break;
-//             }
         
-//            while(1);//remove to continue execution
-                //printf("Uninplemented instruction: 0x%02x\n", _cpu->regs.IR);
-                
+        case 1: //x
+        {
+            switch(opcode.z)
+            {
+                case 6:
+                {
+                    switch(opcode.y)
+                    {
+                        case 6:
+                        {
+                            PRINT_DEBUG("HALT\n");
+                            
+                            
+                            uint16_t * loc0 = (uint16_t *)&_memory[69];
+                            printf("data in mem loc 69: %d\n", *loc0);
+                            printf("data in HL: %d\n", _cpu->regs.HL);
+                            uint8_t * loc1 = (uint8_t *)&_memory[799];
+                            printf("data in loc 799 %d\n", *loc1);
+                            printf("data in D %d\n", _cpu->regs.D);
+                            printf("dat in BC %d\n",  _cpu->regs.BC);
+                            printf("dat in B %d\n",  _cpu->regs.B);
+                            
+                            _cpu->cycles += 4;
+                            _cpu->regs.PC += 1;
+                            while(1);
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                default:
+                {
+                    LOG_ERROR_OP(opcode);
+                    break;
+                }
+            }
+            break;
+        }
+        
+        
+        case 2://x
+        {
+            break;
+        }
+        case 3://x
+        {
+            break;
+        }
+        
+        default:
+        {
+            LOG_ERROR_OP(opcode);
+            break;
+        }
+    }
+
+}
+
+void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
+{
+        
+}
+
+void feDeExInst(CPU * _cpu, uint8_t * _memory)
+{
+    fetchByte(_cpu, _memory);
+    if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
+    {
+        _cpu->regs.PC += 1;
+        fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
+        
+        deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
+    }
+    else
+    {
+        deExInst(_cpu, _memory, _cpu->regs.IR);
     }
 }
+
+int testEval(char * _testName, int _testCondition)
+{
+    if(_testCondition)
+    {
+        printf("test %s - PASS\n", _testName);
+        return 1;
+    }
+    else
+    {
+        printf("test %s - FAIL\n", _testName);
+        return 0;
+    }
+}
+
+void runTestsCPU()
+{
+    CPU * tmpCpu;
+    createCPU(&tmpCpu);
+    uint8_t * tmpRam = (uint8_t*)calloc(10, 1);
+    
+    int pass = 1;
+    //BEGIN test
+    {
+        //test RCLA
+        tmpCpu->regs.A = 0b10010100;
+        deExInst(tmpCpu, tmpRam, 0x07);
+        if(!testEval("RCLA", tmpCpu->regs.A == 0b00101001))
+            pass = 0;
+            
+    }
+    //END test
+    if(pass)
+        printf("--CPU TESTS PASSED--\n");
+    else
+        printf("--CPU TESTS FAILED--\n");
+    
+    
+    free(tmpRam);
+    destroyCPU(&tmpCpu);
+}
+
 
 
 

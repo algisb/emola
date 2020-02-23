@@ -19,6 +19,7 @@ void createGBDevice(GBDevice ** _dev)
     GBDevice * dev;
     //dynamic memory alloc
     dev = (GBDevice*)malloc(sizeof(GBDevice));
+    runTestsCPU();
     createCPU(&dev->cpu);
     createRAM(&dev->ram);
     
