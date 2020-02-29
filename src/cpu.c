@@ -427,6 +427,27 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 1:
                         {
+                            PRINT_DEBUG("RRCA\n");
+                            uint8_t tmp = _cpu->regs.A & 0b00000001;
+                            tmp = tmp << 7;
+                            _cpu->regs.A = _cpu->regs.A >> 1;
+                            tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            _cpu->regs.A = (_cpu->regs.A & 0b01111111) | tmp;
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            
+                            break;
+                        }
+                        
+                        case 2:
+                        {
+                            
+                            break;
+                        }
+                        case 3:
+                        {
+                            
                             break;
                         }
                         default:
@@ -555,10 +576,15 @@ void runTestsCPU()
     int pass = 1;
     //BEGIN test
     {
-        //test RCLA
+        //test RLCA
         tmpCpu->regs.A = 0b10010100;
         deExInst(tmpCpu, tmpRam, 0x07);
         if(!testEval("RCLA", tmpCpu->regs.A == 0b00101001))
+            pass = 0;
+        //test RRCA
+        tmpCpu->regs.A = 0b00010101;
+        deExInst(tmpCpu, tmpRam, 0x0F);
+        if(!testEval("RCLA", tmpCpu->regs.A == 0b10001010))
             pass = 0;
             
     }
