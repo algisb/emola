@@ -442,12 +442,29 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 2:
                         {
+                            PRINT_DEBUG("RLA\n");
+                            uint8_t tmp = _cpu->regs.A & 0b10000000;
+                            tmp = tmp >> 7;
+                            _cpu->regs.A = _cpu->regs.A << 1;
+                            _cpu->regs.A = (_cpu->regs.A & 0b11111110) | getFlag(_cpu, F_C);
+                            tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
                             
                             break;
                         }
                         case 3:
                         {
+                            PRINT_DEBUG("RRA\n");
+                            uint8_t tmp = _cpu->regs.A & 0b00000001;
+                            tmp = tmp << 7;
+                            _cpu->regs.A = _cpu->regs.A >> 1;
+                            _cpu->regs.A = (_cpu->regs.A & 0b01111111) | getFlag(_cpu, F_C);
+                            tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                             
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
                             break;
                         }
                         default:
@@ -579,13 +596,28 @@ void runTestsCPU()
         //test RLCA
         tmpCpu->regs.A = 0b10010100;
         deExInst(tmpCpu, tmpRam, 0x07);
-        if(!testEval("RCLA", tmpCpu->regs.A == 0b00101001))
+        if(!testEval("RLCA", tmpCpu->regs.A == 0b00101001))
             pass = 0;
         //test RRCA
         tmpCpu->regs.A = 0b00010101;
         deExInst(tmpCpu, tmpRam, 0x0F);
-        if(!testEval("RCLA", tmpCpu->regs.A == 0b10001010))
+        if(!testEval("RRCA", tmpCpu->regs.A == 0b10001010))
             pass = 0;
+        
+        //test RLA
+        tmpCpu->regs.A = 0b10010100;
+        resetFlag(tmpCpu, F_C);
+        deExInst(tmpCpu, tmpRam, 0x17);
+        if(!testEval("RLA", tmpCpu->regs.A == 0b00101000 && getFlag(tmpCpu, F_C)))
+            pass = 0;
+        
+        //test RRA
+        tmpCpu->regs.A = 0b00010101;
+        resetFlag(tmpCpu, F_C);
+        deExInst(tmpCpu, tmpRam, 0x1F);
+        if(!testEval("RRA", tmpCpu->regs.A == 0b00001010 && getFlag(tmpCpu, F_C)))
+            pass = 0;
+        
             
     }
     //END test
