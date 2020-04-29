@@ -419,6 +419,9 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->regs.A = _cpu->regs.A << 1;
                             tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                             _cpu->regs.A = (_cpu->regs.A & 0b11111110) | tmp;
+                            resetFlag(_cpu, F_Z);
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
@@ -433,6 +436,9 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->regs.A = _cpu->regs.A >> 1;
                             tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                             _cpu->regs.A = (_cpu->regs.A & 0b01111111) | tmp;
+                            resetFlag(_cpu, F_Z);
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
@@ -448,6 +454,9 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->regs.A = _cpu->regs.A << 1;
                             _cpu->regs.A = (_cpu->regs.A & 0b11111110) | getFlag(_cpu, F_C);
                             tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            resetFlag(_cpu, F_Z);
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
@@ -462,11 +471,98 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->regs.A = _cpu->regs.A >> 1;
                             _cpu->regs.A = (_cpu->regs.A & 0b01111111) | getFlag(_cpu, F_C);
                             tmp ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            resetFlag(_cpu, F_Z);
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
                             break;
                         }
+                        
+                        case 4:
+                        {
+                            PRINT_DEBUG("DAA\n");
+                            int reset = 0;
+                            if (!getFlag(_cpu, F_N))
+                            {
+                                if ((_cpu->regs.A & 0x0F) > 9 || getFlag(_cpu, F_H))
+                                {
+                                    //add 0x06
+                                    _cpu->regs.A += 0x06;
+                                }
+                                if (((_cpu->regs.A & 0xF0) >> 4)  > 9 || getFlag(_cpu, F_C) ) 
+                                {
+                                    reset = 1;
+                                    _cpu->regs.A += 0x60;
+                                }
+                            }
+                            else
+                            {
+                                if (getFlag(_cpu, F_H))
+                                {
+                                    _cpu->regs.A -= 0x06;
+                                }
+                                if ( getFlag(_cpu, F_C) ) 
+                                {
+                                    _cpu->regs.A -= 0x60;
+                                }
+                                
+                            }
+                            resetFlag(_cpu, F_H);
+                            if(reset)
+                                resetFlag(_cpu, F_C);
+                            
+                            _cpu->regs.A == 0 ? setFlag(_cpu, F_Z ) : resetFlag(_cpu, F_Z ) ;
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        case  5:
+                        {
+                            PRINT_DEBUG("CPL\n");
+                            _cpu->regs.A = ~(_cpu->regs.A);
+                            
+                            setFlag(_cpu, F_N);
+                            setFlag(_cpu, F_H);
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        case 6:
+                        {
+                            PRINT_DEBUG("SCF\n");
+                            setFlag(_cpu, F_C);
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        case 7:
+                        {
+                            PRINT_DEBUG("CCF\n");
+                            
+                            if(getFlag(_cpu, F_C))
+                                resetFlag(_cpu, F_C);
+                            else
+                                setFlag(_cpu, F_C);
+                            
+                            resetFlag(_cpu, F_N);
+                            resetFlag(_cpu, F_H);
+                            
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        
                         default:
                         {
                             LOG_ERROR_OP(opcode);
@@ -618,6 +714,11 @@ void runTestsCPU()
         if(!testEval("RRA", tmpCpu->regs.A == 0b00001010 && getFlag(tmpCpu, F_C)))
             pass = 0;
         
+        //test CPL
+        tmpCpu->regs.A = 0b00010101;
+        deExInst(tmpCpu, tmpRam, 0x2F);
+        if(!testEval("CPL", tmpCpu->regs.A == 0b11101010))
+            pass = 0;
             
     }
     //END test
