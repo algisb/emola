@@ -5,7 +5,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "./bin")
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "./bin")
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "./bin")
 
-#kelp engine-----------------------------------------------
 include_directories ("./src")
 file(GLOB EMOLA_SRC "./src/*.c")
 add_executable(emola ${EMOLA_SRC})

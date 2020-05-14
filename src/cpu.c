@@ -584,51 +584,41 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         
         case 1: //x
         {
-            switch(opcode.z)
+            if (opcode.z == 6 || opcode.y == 6)
             {
-                case 6:
-                {
-                    switch(opcode.y)
-                    {
-                        case 6:
-                        {
-                            PRINT_DEBUG("HALT\n");
-                            
-                            
-                            uint16_t * loc0 = (uint16_t *)&_memory[69];
-                            printf("data in mem loc 69: %d\n", *loc0);
-                            printf("data in HL: %d\n", _cpu->regs.HL);
-                            uint8_t * loc1 = (uint8_t *)&_memory[799];
-                            printf("data in loc 799 %d\n", *loc1);
-                            printf("data in D %d\n", _cpu->regs.D);
-                            printf("dat in BC %d\n",  _cpu->regs.BC);
-                            printf("dat in B %d\n",  _cpu->regs.B);
-                            
-                            _cpu->cycles += 4;
-                            _cpu->regs.PC += 1;
-                            while(1);
-                            break;
-                        }
-                        default:
-                        {
-                            LOG_ERROR_OP(opcode);
-                            break;
-                        }
-                    }
-                    break;
-                }
-                default:
-                {
-                    LOG_ERROR_OP(opcode);
-                    break;
-                }
+                PRINT_DEBUG("HALT\n");
+                uint16_t * loc0 = (uint16_t *)&_memory[69];
+                printf("data in mem loc 69: %d\n", *loc0);
+                printf("data in HL: %d\n", _cpu->regs.HL);
+                uint8_t * loc1 = (uint8_t *)&_memory[799];
+                printf("data in loc 799 %d\n", *loc1);
+                printf("data in D %d\n", _cpu->regs.D);
+                printf("dat in BC %d\n",  _cpu->regs.BC);
+                printf("dat in B %d\n",  _cpu->regs.B);
+                
+                _cpu->cycles += 4;
+                _cpu->regs.PC += 1;
+                while(1);
             }
+            else
+            {
+                PRINT_DEBUG("LD r[y] r[z]\n");
+                uint8_t * v0 = getRVal(_cpu, _memory, opcode.y);
+                uint8_t * v1 = getRVal(_cpu, _memory, opcode.z);
+                *v0 = *v1;
+                
+                opcode.y == 6 || opcode.z == 6 ? (_cpu->cycles += 8) : ( _cpu->cycles += 4);
+                _cpu->regs.PC += 1;
+            }
+            
             break;
         }
         
         
         case 2://x
         {
+            //ALU
+            
             break;
         }
         case 3://x
@@ -719,6 +709,14 @@ void runTestsCPU()
         deExInst(tmpCpu, tmpRam, 0x2F);
         if(!testEval("CPL", tmpCpu->regs.A == 0b11101010))
             pass = 0;
+        
+        //test LD r[y] r[z]
+        tmpCpu->regs.D = 0;
+        tmpCpu->regs.E = 123;
+        deExInst(tmpCpu, tmpRam, 0x53);
+        if(!testEval("LD d e", tmpCpu->regs.D == 123))
+            pass = 0;
+        
             
     }
     //END test
