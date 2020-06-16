@@ -2,59 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "regs.h"
-#include "defs.h"
-struct CPU
-{
-    Regs regs;
-    uint32_t cycles;
-    
-    //disassembly tables
-    void * rtable[8];
-    uint16_t * rptable[4];
-    uint16_t * rp2table[4];
-};
+#include "cpu_t.h"
 
-
-
-struct Opcode
-{
-        uint8_t data;
-        
-        uint8_t x : 2;
-        uint8_t y : 3;
-        uint8_t p : 2;
-        uint8_t q : 1;
-        uint8_t z : 3;
-};
-
-enum Flag
-{
-    F_Z,
-    F_N,
-    F_H,
-    F_C    
-};
-typedef enum Flag Flag;
-
-enum CC
-{
-    NZ,
-    Z,
-    NC,
-    C    
-};
-typedef enum CC CC;
 
 const uint8_t xMask = 0b11000000;
 const uint8_t yMask = 0b00111000;
 const uint8_t pMask = 0b00110000;
 const uint8_t qMask = 0b00001000;
 const uint8_t zMask = 0b00000111;
-
-//disassembly tables
-
-
 
 typedef struct Regs Regs;
 

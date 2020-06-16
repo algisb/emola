@@ -1,6 +1,7 @@
 #ifndef CPU_H_
 #define CPU_H_
-#include "regs.h"
+#include <stdint.h>
+
 struct CPU;
 typedef struct CPU CPU;
 
