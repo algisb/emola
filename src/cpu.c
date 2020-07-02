@@ -88,19 +88,19 @@ static void fetchByte(CPU * _cpu, uint8_t * _memory)
     }
 }
 
-static uint8_t getFlag(const CPU * _cpu, Flag _flag)
+uint8_t getFlag(const CPU * _cpu, Flag _flag)
 {
     uint8_t mask = 0b10000000 >> _flag;
     uint8_t nShift = 7 - _flag;
     return (_cpu->regs.F & mask) >> nShift; 
 }
-static void setFlag(CPU * _cpu, Flag _flag)
+void setFlag(CPU * _cpu, Flag _flag)
 {
     uint8_t mask = 0b10000000 >> _flag;
     _cpu->regs.F  |= mask; 
 }
 
-static void resetFlag(CPU * _cpu, Flag _flag)
+void resetFlag(CPU * _cpu, Flag _flag)
 {
     uint8_t mask = 0b10000000 >> _flag;
     _cpu->regs.F  &= ~(mask); 
@@ -247,8 +247,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
                             
                             //process carry flag
-                            ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00 ?
-                            setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            uint32_t c = ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00; 
+                            c ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 8;

@@ -44,4 +44,8 @@ enum CC
 };
 typedef enum CC CC;
 
+uint8_t getFlag(const CPU * _cpu, Flag _flag);
+void setFlag(CPU * _cpu, Flag _flag);
+void resetFlag(CPU * _cpu, Flag _flag);
+
 #endif
