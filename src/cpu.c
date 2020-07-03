@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "cpu_t.h"
+#include "alu.h"
 
 
 const uint8_t xMask = 0b11000000;
@@ -573,7 +574,31 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         case 2://x
         {
             //ALU
-            
+            switch(opcode.y)
+            {
+                case 0:
+                {
+                    PRINT_DEBUG("ADD\n");
+                    add(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
+                case 1:
+                {
+                    PRINT_DEBUG("ADC\n");
+                    adc(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }   
+                default:
+                {
+                    break;
+                }
+            }
             break;
         }
         case 3://x
@@ -671,6 +696,28 @@ void runTestsCPU()
         deExInst(tmpCpu, tmpRam, 0x53);
         if(!testEval("LD d e", tmpCpu->regs.D == 123))
             pass = 0;
+        
+        //test ADD
+        tmpCpu->regs.A = 255;
+        tmpCpu->regs.L = 255;
+        resetFlag(tmpCpu, F_C);
+        deExInst(tmpCpu, tmpRam, 0x85);
+        printf("A : %d , C_F: %d \n",tmpCpu->regs.A, getFlag(tmpCpu, F_C));
+        if(!testEval("ADD A L", tmpCpu->regs.A == 254))
+            pass = 0;
+        
+        //test ADC
+        tmpCpu->regs.BC = 0;
+        tmpCpu->regs.C = tmpCpu->regs.A;
+        tmpCpu->regs.A = 0;
+        tmpCpu->regs.L = 0;
+        deExInst(tmpCpu, tmpRam, 0x8E);
+        tmpCpu->regs.B = tmpCpu->regs.A;
+        
+        printf("BC : %d , C_F: %d \n",tmpCpu->regs.BC, getFlag(tmpCpu, F_C));
+        if(!testEval("ADC A L", tmpCpu->regs.BC == 255 + 255))
+            pass = 0;
+        
         
             
     }
