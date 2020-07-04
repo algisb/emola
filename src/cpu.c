@@ -594,6 +594,24 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     _cpu->regs.PC += 1;
                     break;
                 }   
+                case 2:
+                {
+                    PRINT_DEBUG("SUB\n");
+                    sub(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
+                case 3:
+                {
+                    PRINT_DEBUG("SBC\n");
+                    sbc(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
                 default:
                 {
                     break;
@@ -711,12 +729,32 @@ void runTestsCPU()
         tmpCpu->regs.C = tmpCpu->regs.A;
         tmpCpu->regs.A = 0;
         tmpCpu->regs.L = 0;
-        deExInst(tmpCpu, tmpRam, 0x8E);
+        deExInst(tmpCpu, tmpRam, 0x8D);
         tmpCpu->regs.B = tmpCpu->regs.A;
         
         printf("BC : %d , C_F: %d \n",tmpCpu->regs.BC, getFlag(tmpCpu, F_C));
         if(!testEval("ADC A L", tmpCpu->regs.BC == 255 + 255))
             pass = 0;
+        
+        //test SUB
+        tmpCpu->regs.A = 0;
+        tmpCpu->regs.L = 2;
+        resetFlag(tmpCpu, F_C);
+        deExInst(tmpCpu, tmpRam, 0x95);
+        printf("A : %d , C_F: %d \n",tmpCpu->regs.A, getFlag(tmpCpu, F_C));
+        if(!testEval("SUB L", tmpCpu->regs.A == 254))
+            pass = 0;
+        
+        //test SBC
+        tmpCpu->regs.BC = 0;
+        tmpCpu->regs.C = tmpCpu->regs.A;
+        tmpCpu->regs.A = 1;
+        tmpCpu->regs.L = 0;
+        deExInst(tmpCpu, tmpRam, 0x9D);
+        printf("BC : %d , C_F: %d \n",tmpCpu->regs.BC, getFlag(tmpCpu, F_C));
+        if(!testEval("SUB L", tmpCpu->regs.BC == 254))
+            pass = 0;
+        
         
         
             
