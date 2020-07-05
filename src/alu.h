@@ -9,4 +9,8 @@ void add(CPU * _cpu,  uint8_t * _n );
 void adc(CPU * _cpu,  uint8_t * _n );
 void sub(CPU * _cpu,  uint8_t * _n );
 void sbc(CPU * _cpu,  uint8_t * _n );
+void and(CPU * _cpu,  uint8_t * _n );
+void xor(CPU * _cpu,  uint8_t * _n );
+void or(CPU * _cpu,  uint8_t * _n );
+void cp(CPU * _cpu,  uint8_t * _n );
 #endif

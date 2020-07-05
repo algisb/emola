@@ -58,6 +58,7 @@ void createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
     createDisTables(*_cpu);
+    (*_cpu)->regs.SP = 0xFFFE;
 }
 
 void destroyCPU(CPU ** _cpu)
@@ -612,8 +613,45 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     _cpu->regs.PC += 1;
                     break;
                 }
+                case 4:
+                {
+                    PRINT_DEBUG("AND\n");
+                    and(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
+                case 5:
+                {
+                    PRINT_DEBUG("XOR\n");
+                    xor(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
+                case 6:
+                {
+                    PRINT_DEBUG("or\n");
+                    or(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
+                case 7:
+                {
+                    PRINT_DEBUG("AND\n");
+                    cp(_cpu, getRVal(_cpu, _memory,  opcode.z));
+                    
+                    _cpu->cycles += opcode.z == 6 ? 8 : 4;
+                    _cpu->regs.PC += 1;
+                    break;
+                }
                 default:
                 {
+                    LOG_ERROR_OP(opcode);
                     break;
                 }
             }

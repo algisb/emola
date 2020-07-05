@@ -67,3 +67,48 @@ void sbc(CPU * _cpu, uint8_t * _n )
      setFlag(_cpu, F_N);
 }
 
+void and(CPU * _cpu,  uint8_t * _n )
+{
+    _cpu->regs.A  = _cpu->regs.A & *_n;
+    
+    _cpu->regs.A ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+    resetFlag(_cpu, F_N);
+    setFlag(_cpu, F_H);
+    resetFlag(_cpu, F_C);
+}
+
+void or(CPU * _cpu,  uint8_t * _n )
+{
+    _cpu->regs.A  = _cpu->regs.A | *_n;
+    
+    _cpu->regs.A ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+    resetFlag(_cpu, F_N);
+    resetFlag(_cpu, F_H);
+    resetFlag(_cpu, F_C);
+}
+
+void xor(CPU * _cpu,  uint8_t * _n )
+{
+    _cpu->regs.A  = _cpu->regs.A ^ *_n;
+    
+    _cpu->regs.A ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+    resetFlag(_cpu, F_N);
+    resetFlag(_cpu, F_H);
+    resetFlag(_cpu, F_C);
+}
+
+void cp(CPU * _cpu, uint8_t * _n )
+{
+    //process half carry flag
+    (_cpu->regs.A & 0x0F) < (*_n & 0x0F)  ? 
+    setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+
+    //process carry flag
+    (_cpu->regs.A) < (*_n) ?
+    setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+     
+     //_cpu->regs.A -= *_n;
+     _cpu->regs.A ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+     setFlag(_cpu, F_N);
+}
+
