@@ -633,7 +633,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 6:
                 {
-                    PRINT_DEBUG("or\n");
+                    PRINT_DEBUG("OR\n");
                     or(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -659,6 +659,74 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         }
         case 3://x
         {
+            switch(opcode.z)
+            {
+                case 0:
+                {
+                    switch(opcode.y)
+                    {
+                        case 0:
+                        case 1:
+                        case 2:
+                        case 3:
+                        {
+                            PRINT_DEBUG("RET cc[y]\n");
+                            if (getCC(_cpu, opcode.y))
+                            {
+                                uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                                _cpu->regs.PC = *loc;
+                                _cpu->regs.SP += 2;
+                                //probably doesn't incrament PC unlike all the other ops
+                            }
+                            else
+                            {
+                                _cpu->regs.PC += 1;
+                            }
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                
+                case 1:
+                {
+                    break;
+                }
+                
+                case 2:
+                {
+                    break;
+                }
+                
+                case 3:
+                {
+                    break;
+                }
+                
+                case 4:
+                {
+                    break;
+                }
+                
+                case 5:
+                {
+                    break;
+                }
+                
+                default:
+                {
+                    LOG_ERROR_OP(opcode);
+                    break;
+                }
+            }
             break;
         }
         
