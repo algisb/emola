@@ -245,12 +245,12 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             resetFlag(_cpu, F_N);
                             
                             //process half carry flag
-                            ((_cpu->regs.HL & 0x000F) + (*(_cpu->rptable[opcode.p]) & 0x000F )) & 0x00F0 ? 
+                            ((_cpu->regs.HL & 0x0FFF) + (*(_cpu->rptable[opcode.p]) & 0x0FFF )) & 0xF000 ? 
                             setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
                             
                             //process carry flag
-                            uint32_t c = ((_cpu->regs.HL & 0x00FF) + (*(_cpu->rptable[opcode.p]) & 0x00FF )) & 0x0F00; 
-                            c ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            uint32_t c = (_cpu->regs.HL) + *(_cpu->rptable[opcode.p]); 
+                            c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 8;
@@ -684,6 +684,34 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             }
                             _cpu->cycles += 8;
                             break;
+                        }
+                        
+                        case 4:
+                        {
+                            PRINT_DEBUG("LD (0xFF00 + n), A\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + *n]);
+                            *loc = _cpu->regs.A;
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 12;
+                        }
+                        case 5:
+                        {
+                            PRINT_DEBUG("ADD SP, d\n");
+                            
+                        }
+                        case 6:
+                        {
+                            PRINT_DEBUG("LD A, (0xFF00 + n)\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + *n]);
+                            _cpu->regs.A = *loc;
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 12;
+                        }
+                        case 7:
+                        {
+                            
                         }
                         
                         default:
