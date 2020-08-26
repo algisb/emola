@@ -698,6 +698,19 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 1:
                 {
+                    switch(opcode.q)
+                    {
+                        case 0:
+                        {
+                            PRINT_DEBUG("POP rp2[p]\n");
+                            uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                            *_cpu->rp2table[opcode.p] = *loc;
+                            _cpu->regs.SP += 2;
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 12;
+                            break;
+                        }
+                    }
                     break;
                 }
                 
@@ -718,6 +731,25 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 5:
                 {
+                    switch(opcode.q)
+                    {
+                        case 0:
+                        {
+                            PRINT_DEBUG("PUSH rp2[p]\n");
+                            _cpu->regs.SP -= 2;
+                            uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                            *loc = *_cpu->rp2table[opcode.p];
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 16;
+                            break;
+                        }
+                        
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
                     break;
                 }
                 
@@ -778,7 +810,7 @@ void runTestsCPU()
 {
     CPU * tmpCpu;
     createCPU(&tmpCpu);
-    uint8_t * tmpRam = (uint8_t*)calloc(10, 1);
+    uint8_t * tmpRam = (uint8_t*)calloc(RAM_SIZE, 1);
     
     int pass = 1;
     //BEGIN test
@@ -859,6 +891,20 @@ void runTestsCPU()
         deExInst(tmpCpu, tmpRam, 0x9D);
         printf("BC : %d , C_F: %d \n",tmpCpu->regs.BC, getFlag(tmpCpu, F_C));
         if(!testEval("SUB L", tmpCpu->regs.BC == 254))
+            pass = 0;
+        
+        //test PUSH BC
+        tmpCpu->regs.BC = 100;
+        deExInst(tmpCpu, tmpRam, 0xC5);
+        uint16_t * loc = (uint16_t *)(&tmpRam[tmpCpu->regs.SP]);
+        printf("TOP STACK VALUE : %d \n", *loc);
+        if(!testEval("PUSH BC", *loc == 100))
+            pass = 0;
+        
+        //test POP DE
+        deExInst(tmpCpu, tmpRam, 0xD1);
+        printf("DE : %d \n", tmpCpu->regs.DE);
+        if(!testEval("POP DE", tmpCpu->regs.DE == 100))
             pass = 0;
         
         
