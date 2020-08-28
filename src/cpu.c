@@ -241,7 +241,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 1:
                         {
                             PRINT_DEBUG("ADD HL rp[p]\n");
-                            _cpu->regs.HL += *(_cpu->rptable[opcode.p]) ;
+                            _cpu->regs.HL += *(_cpu->rptable[opcode.p]);
                             resetFlag(_cpu, F_N);
                             
                             //process half carry flag
@@ -694,11 +694,43 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             *loc = _cpu->regs.A;
                             _cpu->regs.PC += 2;
                             _cpu->cycles += 12;
+                            break;
                         }
                         case 5:
                         {
                             PRINT_DEBUG("ADD SP, d\n");
+                            int8_t * d = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            uint8_t sign = (*d) & 0b10000000;
+                            uint8_t ud = sign ? 128 - (*d) & 0b01111111 : (*d) & 0b01111111;
+                            if(sign)//neg
+                            {
+                                //process half carry flag
+                                ((_cpu->regs.SP & 0x0FFF) < ud) ? 
+                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                                
+                                //process carry flag
+                                (_cpu->regs.SP) < ud ?
+                                setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                                
+                            }
+                            else//pos
+                            {
+                                //process half carry flag
+                                ((_cpu->regs.SP & 0x0FFF) + *(d)) & 0xF000 ? 
+                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+                                
+                                //process carry flag
+                                uint32_t c = (_cpu->regs.SP) + *(d); 
+                                c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                                
+                            }
+                            _cpu->regs.SP += *d;
+                            resetFlag(_cpu, F_Z);
+                            resetFlag(_cpu, F_N);
                             
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 16;
+                            break;
                         }
                         case 6:
                         {
@@ -708,10 +740,12 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->regs.A = *loc;
                             _cpu->regs.PC += 2;
                             _cpu->cycles += 12;
+                            break;
                         }
                         case 7:
                         {
-                            
+                            PRINT_DEBUG("LD HL, SP+d\n");
+                            break;
                         }
                         
                         default:
@@ -934,6 +968,19 @@ void runTestsCPU()
         printf("DE : %d \n", tmpCpu->regs.DE);
         if(!testEval("POP DE", tmpCpu->regs.DE == 100))
             pass = 0;
+        
+        //test ADD SP, d
+        {
+        uint16_t tmpSP = tmpCpu->regs.SP;
+        tmpCpu->regs.SP = 0;
+        int8_t * d = (int8_t*)(&tmpRam[tmpCpu->regs.PC + 1]);
+        *d = -100;
+        deExInst(tmpCpu, tmpRam, 0xE8);
+        printf("SP: %d C_F: %d \n", tmpCpu->regs.SP, getFlag(tmpCpu,F_C));
+        if(!testEval("ADD SP, d", (tmpCpu->regs.SP == 0xFFFF - 99) && (getFlag(tmpCpu,F_C)) ))
+            pass = 0;
+        tmpCpu->regs.SP = tmpSP;
+        }
         
         
         
