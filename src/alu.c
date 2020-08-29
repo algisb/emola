@@ -112,3 +112,54 @@ void cp(CPU * _cpu, uint8_t * _n )
      setFlag(_cpu, F_N);
 }
 
+
+
+
+void addHLuint16(CPU * _cpu,  uint16_t * _n )
+{
+    resetFlag(_cpu, F_N);
+                            
+    //process half carry flag
+    ((_cpu->regs.HL & 0x0FFF) + (*(_n) & 0x0FFF )) & 0xF000 ? 
+    setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+    
+    //process carry flag
+    uint32_t c = (_cpu->regs.HL) + *(_n); 
+    c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+    
+    _cpu->regs.HL += *(_n);
+                            
+}
+
+void addSPint8(CPU * _cpu,  int8_t * _n )
+{
+    int8_t * d = _n;
+    uint8_t sign = (*d) & 0b10000000;
+    uint8_t ud = sign ? 128 - (*d) & 0b01111111 : (*d) & 0b01111111;
+    if(sign)//neg
+    {
+        //process half carry flag
+        ((_cpu->regs.SP & 0x0FFF) < ud) ? 
+        setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+        
+        //process carry flag
+        (_cpu->regs.SP) < ud ?
+        setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+        
+    }
+    else//pos
+    {
+        //process half carry flag
+        ((_cpu->regs.SP & 0x0FFF) + *(d)) & 0xF000 ? 
+        setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+        
+        //process carry flag
+        uint32_t c = (_cpu->regs.SP) + *(d); 
+        c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+        
+    }
+    _cpu->regs.SP += *d;
+    resetFlag(_cpu, F_Z);
+    resetFlag(_cpu, F_N);
+}
+

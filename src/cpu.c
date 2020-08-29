@@ -241,16 +241,18 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 1:
                         {
                             PRINT_DEBUG("ADD HL rp[p]\n");
-                            _cpu->regs.HL += *(_cpu->rptable[opcode.p]);
-                            resetFlag(_cpu, F_N);
-                            
-                            //process half carry flag
-                            ((_cpu->regs.HL & 0x0FFF) + (*(_cpu->rptable[opcode.p]) & 0x0FFF )) & 0xF000 ? 
-                            setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-                            
-                            //process carry flag
-                            uint32_t c = (_cpu->regs.HL) + *(_cpu->rptable[opcode.p]); 
-                            c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                            addHLuint16(_cpu, _cpu->rptable[opcode.p]);
+//                             resetFlag(_cpu, F_N);
+//                             
+//                             //process half carry flag
+//                             ((_cpu->regs.HL & 0x0FFF) + (*(_cpu->rptable[opcode.p]) & 0x0FFF )) & 0xF000 ? 
+//                             setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
+//                             
+//                             //process carry flag
+//                             uint32_t c = (_cpu->regs.HL) + *(_cpu->rptable[opcode.p]); 
+//                             c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+//                             
+//                             _cpu->regs.HL += *(_cpu->rptable[opcode.p]);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 8;
@@ -676,12 +678,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                                 uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
                                 _cpu->regs.PC = *loc;
                                 _cpu->regs.SP += 2;
-                                //probably doesn't incrament PC unlike all the other ops
                             }
-                            else
-                            {
-                                _cpu->regs.PC += 1;
-                            }
+                            _cpu->regs.PC += 1;
                             _cpu->cycles += 8;
                             break;
                         }
@@ -699,34 +697,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 5:
                         {
                             PRINT_DEBUG("ADD SP, d\n");
-                            int8_t * d = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
-                            uint8_t sign = (*d) & 0b10000000;
-                            uint8_t ud = sign ? 128 - (*d) & 0b01111111 : (*d) & 0b01111111;
-                            if(sign)//neg
-                            {
-                                //process half carry flag
-                                ((_cpu->regs.SP & 0x0FFF) < ud) ? 
-                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-                                
-                                //process carry flag
-                                (_cpu->regs.SP) < ud ?
-                                setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
-                                
-                            }
-                            else//pos
-                            {
-                                //process half carry flag
-                                ((_cpu->regs.SP & 0x0FFF) + *(d)) & 0xF000 ? 
-                                setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-                                
-                                //process carry flag
-                                uint32_t c = (_cpu->regs.SP) + *(d); 
-                                c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
-                                
-                            }
-                            _cpu->regs.SP += *d;
-                            resetFlag(_cpu, F_Z);
-                            resetFlag(_cpu, F_N);
+                            addSPint8(_cpu,(int8_t *)(&_memory[_cpu->regs.PC + 1]));
                             
                             _cpu->regs.PC += 2;
                             _cpu->cycles += 16;
@@ -745,6 +716,13 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 7:
                         {
                             PRINT_DEBUG("LD HL, SP+d\n");
+                            uint16_t tmpSP = _cpu->regs.SP;
+                            addSPint8(_cpu,(int8_t *)(&_memory[_cpu->regs.PC + 1]));
+                            _cpu->regs.HL = _cpu->regs.SP;
+                            _cpu->regs.SP = tmpSP;
+                            
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 12;
                             break;
                         }
                         
@@ -772,6 +750,62 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             _cpu->cycles += 12;
                             break;
                         }
+                        case 1:
+                        {
+                            switch(opcode.p)
+                            {
+                                case 0:
+                                {
+                                    PRINT_DEBUG("RET\n");
+                                    uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                                    _cpu->regs.PC = *loc;
+                                    _cpu->regs.SP += 2;
+                                    
+                                    _cpu->regs.PC += 1;
+                                    _cpu->cycles += 16;
+                                    break;
+                                }
+                                case 1:
+                                {
+                                    PRINT_DEBUG("RETI\n");
+                                    uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                                    _cpu->regs.PC = *loc;
+                                    _cpu->regs.SP += 2;
+                                    //TODO Enable interrupts
+                                    
+                                    _cpu->regs.PC += 1;
+                                    _cpu->cycles += 16;
+                                    break;
+                                }
+                                case 2:
+                                {
+                                    PRINT_DEBUG("JP HL\n");
+                                    _cpu->regs.PC = _cpu->regs.HL;
+                                    
+                                    _cpu->regs.PC += 1;
+                                    _cpu->cycles += 4;
+                                    break;
+                                }
+                                case 3:
+                                {
+                                    PRINT_DEBUG("LD SP, HL\n");
+                                    break;
+                                }
+                                
+                                default:
+                                {
+                                    LOG_ERROR_OP(opcode);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                        
                     }
                     break;
                 }

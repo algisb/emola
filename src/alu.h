@@ -13,4 +13,7 @@ void and(CPU * _cpu,  uint8_t * _n );
 void xor(CPU * _cpu,  uint8_t * _n );
 void or(CPU * _cpu,  uint8_t * _n );
 void cp(CPU * _cpu,  uint8_t * _n );
+
+void addHLuint16(CPU * _cpu,  uint16_t * _n );
+void addSPint8(CPU * _cpu,  int8_t * _n );
 #endif
