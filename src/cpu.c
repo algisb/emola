@@ -185,11 +185,10 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 3:
                         {
-                            PRINT_DEBUG("JN d\n");
+                            PRINT_DEBUG("JR d\n");
                             int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
-                            _cpu->regs.PC += 2;
                             _cpu->regs.PC += *loc0;
-                            _cpu->cycles += 12;
+                            _cpu->cycles += 8;
                             break;
                         }
 
@@ -198,19 +197,17 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 6:
                         case 7:
                         {
-                            PRINT_DEBUG("JN cc[y-4] d\n");
+                            PRINT_DEBUG("JR cc[y-4] d\n");
                             if(getCC(_cpu, opcode.y - 4))
                             {
                                 int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
-                                _cpu->regs.PC += 2;
                                 _cpu->regs.PC += *loc0;
-                                _cpu->cycles += 12;
                             }
                             else
                             {
                                 _cpu->regs.PC += 2;
-                                _cpu->cycles += 8;
                             }
+                            _cpu->cycles += 8;
                             break;
                         }
                         
@@ -242,17 +239,6 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         {
                             PRINT_DEBUG("ADD HL rp[p]\n");
                             addHLuint16(_cpu, _cpu->rptable[opcode.p]);
-//                             resetFlag(_cpu, F_N);
-//                             
-//                             //process half carry flag
-//                             ((_cpu->regs.HL & 0x0FFF) + (*(_cpu->rptable[opcode.p]) & 0x0FFF )) & 0xF000 ? 
-//                             setFlag(_cpu, F_H) : resetFlag(_cpu, F_H);
-//                             
-//                             //process carry flag
-//                             uint32_t c = (_cpu->regs.HL) + *(_cpu->rptable[opcode.p]); 
-//                             c > 0xFFFF ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
-//                             
-//                             _cpu->regs.HL += *(_cpu->rptable[opcode.p]);
                             
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 8;
@@ -679,7 +665,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                                 _cpu->regs.PC = *loc;
                                 _cpu->regs.SP += 2;
                             }
-                            _cpu->regs.PC += 1;
+                            
                             _cpu->cycles += 8;
                             break;
                         }
@@ -773,7 +759,6 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                                     _cpu->regs.SP += 2;
                                     //TODO Enable interrupts
                                     
-                                    _cpu->regs.PC += 1;
                                     _cpu->cycles += 16;
                                     break;
                                 }
@@ -781,14 +766,16 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                                 {
                                     PRINT_DEBUG("JP HL\n");
                                     _cpu->regs.PC = _cpu->regs.HL;
-                                    
-                                    _cpu->regs.PC += 1;
                                     _cpu->cycles += 4;
                                     break;
                                 }
                                 case 3:
                                 {
                                     PRINT_DEBUG("LD SP, HL\n");
+                                    _cpu->regs.SP = _cpu->regs.HL;
+                                                                        
+                                    _cpu->regs.PC += 1;
+                                    _cpu->cycles += 8;
                                     break;
                                 }
                                 
@@ -810,22 +797,96 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     break;
                 }
                 
-                case 2:
+                case 2://z
+                {
+                    switch(opcode.y)
+                    {
+                        case 0:
+                        case 1:
+                        case 2:
+                        case 3:
+                        {
+                            PRINT_DEBUG("JP cc[y], nn");
+                            if (getCC(_cpu, opcode.y))
+                            {
+                                uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                                _cpu->regs.PC = *loc;
+                            }
+                            else
+                            {
+                                _cpu->regs.PC += 3;
+                            }
+                            _cpu->cycles += 12;
+                            break;
+                        }
+                        
+                        case 4:
+                        {
+                            PRINT_DEBUG("LD (0xFF00+C), A");
+                            uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + _cpu->regs.C]);
+                            *loc = _cpu->regs.A;
+                            
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        case 5:
+                        {
+                            PRINT_DEBUG("LD (nn), A");
+                            uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                            uint8_t * loc = (uint8_t *)(&_memory[*nn]);
+                            *loc = _cpu->regs.A;
+                            
+                            _cpu->regs.PC += 3;
+                            _cpu->cycles += 16;
+                            break;
+                        }
+                        
+                        case 6:
+                        {
+                            PRINT_DEBUG("LD A, (0xFF00+C)");
+                            uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + _cpu->regs.C]);
+                            _cpu->regs.A = *loc;
+                            
+                            _cpu->regs.PC += 2;
+                            _cpu->cycles += 8;
+                            break;
+                        }
+                        
+                        case 7:
+                        {
+                            PRINT_DEBUG("LD A, (nn)");
+                            uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                            uint8_t * loc = (uint8_t *)(&_memory[*nn]);
+                            _cpu->regs.A = *loc;
+                            
+                            _cpu->regs.PC += 3;
+                            _cpu->cycles += 16;
+                            break;
+                        }
+                        
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                        
+                    }
+                    break;
+                }
+                
+                case 3://z
                 {
                     break;
                 }
                 
-                case 3:
+                case 4://z
                 {
                     break;
                 }
                 
-                case 4:
-                {
-                    break;
-                }
-                
-                case 5:
+                case 5://z
                 {
                     switch(opcode.q)
                     {
