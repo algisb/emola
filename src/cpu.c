@@ -878,6 +878,42 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 3://z
                 {
+                    switch(opcode.y)
+                    {
+                        case 0:
+                        {
+                            PRINT_DEBUG("JP nn");
+                            uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                            _cpu->regs.PC = *nn;
+                            
+                            //_cpu->regs.PC += 3;
+                            _cpu->cycles += 16;
+                            break;
+                        }
+                        
+                        case 6:
+                        {
+                            PRINT_DEBUG("DI");
+                            //TODO
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        
+                        case 7:
+                        {
+                            PRINT_DEBUG("EI");
+                            //TODO
+                            _cpu->regs.PC += 1;
+                            _cpu->cycles += 4;
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
                     break;
                 }
                 
