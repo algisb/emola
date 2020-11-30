@@ -919,12 +919,26 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 4://z
                 {
+                    switch(opcode.y)
+                    {
+                        case 0:
+                        case 1:
+                        case 2:
+                        {
+                            
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
                     break;
                 }
                 
                 case 5://z
                 {
-                    switch(opcode.q)
+                    switch(opcode.q)//q
                     {
                         case 0:
                         {
@@ -934,6 +948,36 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             *loc = *_cpu->rp2table[opcode.p];
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 16;
+                            break;
+                        }
+                        
+                        case 1:
+                        {
+                            switch(opcode.p)
+                            {
+                                case 0:
+                                {
+                                    PRINT_DEBUG("CALL nn\n");
+                                    //push
+                                    _cpu->regs.SP -= 2;
+                                    uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                                    *loc = (_cpu->regs.PC+3);
+                                    //jump to label
+                                    uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                                    _cpu->regs.PC = *nn;
+                                    
+                                    _cpu->regs.PC += 3;
+                                    _cpu->cycles += 24;
+                                    
+                                    break;
+                                }
+                                default:
+                                {
+                                    LOG_ERROR_OP(opcode);
+                                    break;
+                                }
+                            }
+                            
                             break;
                         }
                         
@@ -1113,6 +1157,23 @@ void runTestsCPU()
         tmpCpu->regs.SP = tmpSP;
         }
         
+        //test CALL
+        {
+        uint16_t tmpPC = 590;
+        tmpCpu->regs.PC = tmpPC;
+        uint16_t * loc3 = (uint16_t *)(&tmpRam[tmpCpu->regs.PC + 1]);
+        *loc3 = 690;
+        
+        uint8_t * loc2 = (uint8_t *)(&tmpRam[690]);
+        *loc2 = 0x0;
+        
+        deExInst(tmpCpu, tmpRam, 0xCD);
+        deExInst(tmpCpu, tmpRam, 0xC9);
+        printf("PC: %d \n", tmpCpu->regs.PC);
+        //tmpRam[tmpCpu->regs.SP];
+        if(!testEval("CALL 690", tmpCpu->regs.PC == tmpPC + 4))
+            pass = 0;
+        }
         
         
             
