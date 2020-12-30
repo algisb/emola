@@ -924,12 +924,33 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 0:
                         case 1:
                         case 2:
+                        case 3:
                         {
+                            PRINT_DEBUG("CALL cc[y], nn\n");
+                            if (getCC(_cpu, opcode.y))
+                            {
+                                //push
+                                _cpu->regs.SP -= 2;
+                                uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                                *loc = (_cpu->regs.PC+3);
+                                //jump to label
+                                uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
+                                _cpu->regs.PC = *nn;
+                            
+                                _cpu->regs.PC += 3;
+                                _cpu->cycles += 24;
+                            }
+                            else
+                            {
+                                _cpu->regs.PC += 3;
+                                _cpu->cycles += 12;
+                            }
                             
                             break;
                         }
                         default:
                         {
+                            LOG_ERROR_OP(opcode);
                             break;
                         }
                     }
@@ -987,6 +1008,25 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                             break;
                         }
                     }
+                    break;
+                }
+                
+                case 6:
+                {
+                    break;
+                }
+                case 7:
+                {
+                    PRINT_DEBUG("RST y*8\n");
+                    //push
+                    _cpu->regs.SP -= 2;
+                    uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+                    *loc = _cpu->regs.PC + 1;
+                    //jump
+                    _cpu->regs.PC = opcode.y * 8;
+                    
+                    _cpu->cycles += 16;
+                    
                     break;
                 }
                 
@@ -1172,6 +1212,22 @@ void runTestsCPU()
         printf("PC: %d \n", tmpCpu->regs.PC);
         //tmpRam[tmpCpu->regs.SP];
         if(!testEval("CALL 690", tmpCpu->regs.PC == tmpPC + 4))
+            pass = 0;
+        }
+        
+        //test RST
+        {
+        deExInst(tmpCpu, tmpRam, 0xCF);
+        if(!testEval("RST 08H", tmpCpu->regs.PC == 0x08))
+            pass = 0;
+        
+        
+        deExInst(tmpCpu, tmpRam, 0xEF);
+        if(!testEval("RST 28H", tmpCpu->regs.PC == 0x28))
+            pass = 0;
+        
+        deExInst(tmpCpu, tmpRam, 0xE7);
+        if(!testEval("RST 20H", tmpCpu->regs.PC == 0x20))
             pass = 0;
         }
         
