@@ -562,12 +562,12 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         
         case 2://x
         {
-            //ALU
+            //ALU[y] r[z]
             switch(opcode.y)
             {
                 case 0:
                 {
-                    PRINT_DEBUG("ADD\n");
+                    PRINT_DEBUG("ADD r[z]\n");
                     add(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -576,7 +576,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 1:
                 {
-                    PRINT_DEBUG("ADC\n");
+                    PRINT_DEBUG("ADC r[z]\n");
                     adc(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -585,7 +585,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }   
                 case 2:
                 {
-                    PRINT_DEBUG("SUB\n");
+                    PRINT_DEBUG("SUB r[z]\n");
                     sub(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -594,7 +594,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 3:
                 {
-                    PRINT_DEBUG("SBC\n");
+                    PRINT_DEBUG("SBC r[z]\n");
                     sbc(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -603,7 +603,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 4:
                 {
-                    PRINT_DEBUG("AND\n");
+                    PRINT_DEBUG("AND r[z]\n");
                     and(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -612,7 +612,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 5:
                 {
-                    PRINT_DEBUG("XOR\n");
+                    PRINT_DEBUG("XOR r[z]\n");
                     xor(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -621,7 +621,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 6:
                 {
-                    PRINT_DEBUG("OR\n");
+                    PRINT_DEBUG("OR r[z]\n");
                     or(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -630,7 +630,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 7:
                 {
-                    PRINT_DEBUG("AND\n");
+                    PRINT_DEBUG("AND r[z]\n");
                     cp(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -1013,8 +1013,98 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 6:
                 {
+                    //ALU[y] n
+                    switch(opcode.y)
+                    {
+                        case 0:
+                        {
+                            PRINT_DEBUG("ADD n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            add(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 1:
+                        {
+                            PRINT_DEBUG("ADC n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            adc(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }   
+                        case 2:
+                        {
+                            PRINT_DEBUG("SUB n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            sub(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 3:
+                        {
+                            PRINT_DEBUG("SBC n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            sbc(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 4:
+                        {
+                            PRINT_DEBUG("AND n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            and(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 5:
+                        {
+                            PRINT_DEBUG("XOR n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            xor(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 6:
+                        {
+                            PRINT_DEBUG("OR n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            or(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        case 7:
+                        {
+                            PRINT_DEBUG("AND n\n");
+                            uint8_t * n = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
+                            cp(_cpu, n);
+                            
+                            _cpu->cycles += 8;
+                            _cpu->regs.PC += 2;
+                            break;
+                        }
+                        default:
+                        {
+                            LOG_ERROR_OP(opcode);
+                            break;
+                        }
+                    }
                     break;
                 }
+                
                 case 7:
                 {
                     PRINT_DEBUG("RST y*8\n");
@@ -1231,6 +1321,19 @@ void runTestsCPU()
             pass = 0;
         }
         
+        //test ADD d8
+        {
+            tmpCpu->regs.PC = 0;
+            tmpCpu->regs.A = 0;
+            
+            int8_t * d = (int8_t*)(&tmpRam[tmpCpu->regs.PC + 1]);
+            *d = 30;
+            
+            deExInst(tmpCpu, tmpRam, 0xC6);
+            if(!testEval("ADD A, 30", tmpCpu->regs.A == 30))
+                pass = 0;
+            
+        }
         
             
     }
