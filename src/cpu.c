@@ -1140,7 +1140,72 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
 
 void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
 {
+    Opcode opcode = decodeOp(_op);
+    switch(opcode.x)
+    {
+        case 0:
+        {
+            switch(opcode.y)
+            {
+                case 0:
+                {
+                    PRINT_DEBUG("RLC r[z]\n");
+                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t msb = *r & 0b10000000;
+                    
+                    *r = (*r << 1);
+                    if (msb)
+                    {
+                        *r |= 0b00000001;
+                        setFlag(_cpu, F_C);
+                    }
+                    else
+                    {
+                        *r &= ~(0b00000001);
+                        resetFlag(_cpu, F_C);
+                    }
+                    
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                case 1:
+                {
+                    PRINT_DEBUG("RRC r[z]\n");
+                    break;
+                }
+                
+                default:
+                {
+                    LOG_ERROR_OP(opcode);
+                    break;
+                }
+            }
+            break;
+        }
         
+        case 1:
+        {
+            break;
+        }
+        case 2:
+        {
+            break;
+        }
+        case 3:
+        {
+            break;
+        }
+        default:
+        {
+            LOG_ERROR_OP(opcode);
+            break;
+        }
+    }
 }
 
 void feDeExInst(CPU * _cpu, uint8_t * _memory)
@@ -1333,6 +1398,14 @@ void runTestsCPU()
             if(!testEval("ADD A, 30", tmpCpu->regs.A == 30))
                 pass = 0;
             
+        }
+        
+        //test RLC
+        {
+            tmpCpu->regs.B = 0b10000000;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x00);
+            if(!testEval("RLC B", tmpCpu->regs.B == 1))
+                pass = 0;
         }
         
             

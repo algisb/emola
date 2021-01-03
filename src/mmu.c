@@ -53,6 +53,13 @@ void createRAM(uint8_t ** _ram)
     ram[i] = 111;
     i++;
     
+    //RLC B
+    ram[i] = 0xCB;
+    i++;
+    ram[i] = 0x00;
+    i++;
+    
+    
     //HALT
     ram[i] = 0x76;
     i++;
