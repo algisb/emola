@@ -1176,7 +1176,70 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 case 1:
                 {
                     PRINT_DEBUG("RRC r[z]\n");
+                    
+                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t lsb = *r & 0b00000001;
+                    
+                    *r = (*r >> 1);
+                    if (lsb)
+                    {
+                        *r |= 0b10000000;
+                        setFlag(_cpu, F_C);
+                    }
+                    else
+                    {
+                        *r &= ~(0b10000000);
+                        resetFlag(_cpu, F_C);
+                    }
+                    
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
                     break;
+                }
+                case 2:
+                {
+                    PRINT_DEBUG("RL r[z]\n");
+                    
+                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t msb = *r & 0b10000000;
+                    uint8_t cf = getFlag(_cpu, F_C);
+                    
+                    *r = (*r << 1);
+                    msb ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                    cf ? (*r |= 0b00000001) : (*r &= ~(0b00000001));
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                case 3:
+                {
+                    PRINT_DEBUG("RR r[z]\n");
+                    
+                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t lsb = *r & 0b00000001;
+                    uint8_t cf = getFlag(_cpu, F_C);
+                    
+                    *r = (*r >> 1);
+                    lsb ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                    cf ? (*r |= 0b10000000) : (*r &= ~(0b10000000));
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                    
                 }
                 
                 default:
@@ -1405,6 +1468,23 @@ void runTestsCPU()
             tmpCpu->regs.B = 0b10000000;
             deExInstPrefixed(tmpCpu, tmpRam, 0x00);
             if(!testEval("RLC B", tmpCpu->regs.B == 1))
+                pass = 0;
+        }
+        
+        //test RL
+        {
+            setFlag(tmpCpu, F_C);
+            tmpCpu->regs.B = 0b10000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x10);
+            if(!testEval("RL B", tmpCpu->regs.B == 3 && getFlag(tmpCpu, F_C) == 1))
+                pass = 0;
+        }
+        //test RR
+        {
+            setFlag(tmpCpu, F_C);
+            tmpCpu->regs.B = 0b10000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x18);
+            if(!testEval("RR B", tmpCpu->regs.B == 0b11000000 && getFlag(tmpCpu, F_C) == 1))
                 pass = 0;
         }
         
