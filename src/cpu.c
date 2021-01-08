@@ -42,11 +42,11 @@ static void createDisTables(CPU* _cpu)
     _cpu->rp2table[3] = &_cpu->regs.AF;
 }
 
-uint8_t * getRVal(CPU * _cpu, uint8_t * _memory, uint8_t _index)
+uint8_t * getRVal(CPU * _cpu, uint8_t * _memory, uint8_t _index)//TODO: go through all uses of this and incrament cycles if _index == 6
 {
     if(_index == 6)
     {
-         return (uint8_t *)(&_memory[*(uint16_t*)(_cpu->rtable[_index])]);
+        return (uint8_t *)(&_memory[*(uint16_t*)(_cpu->rtable[_index])]);
     }
     else
     {
@@ -1150,7 +1150,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 case 0:
                 {
                     PRINT_DEBUG("RLC r[z]\n");
-                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
                     uint8_t msb = *r & 0b10000000;
                     
                     *r = (*r << 1);
@@ -1177,7 +1177,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 {
                     PRINT_DEBUG("RRC r[z]\n");
                     
-                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
                     uint8_t lsb = *r & 0b00000001;
                     
                     *r = (*r >> 1);
@@ -1204,7 +1204,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 {
                     PRINT_DEBUG("RL r[z]\n");
                     
-                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
                     uint8_t msb = *r & 0b10000000;
                     uint8_t cf = getFlag(_cpu, F_C);
                     
@@ -1224,7 +1224,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 {
                     PRINT_DEBUG("RR r[z]\n");
                     
-                    uint8_t *r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
                     uint8_t lsb = *r & 0b00000001;
                     uint8_t cf = getFlag(_cpu, F_C);
                     
@@ -1241,6 +1241,85 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     break;
                     
                 }
+                
+                case 4:
+                {
+                    PRINT_DEBUG("SLA r[z]\n");
+                    
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t msb = *r & 0b10000000;
+                    
+                    *r = (*r << 1);
+                    msb ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                case 5:
+                {
+                    PRINT_DEBUG("SRA r[z]\n");
+                    
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t lsb = *r & 0b00000001;
+                    uint8_t msb = *r & 0b10000000;
+                    
+                    *r = (*r >> 1);
+                    *r |= msb;
+                    
+                    lsb ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                case 6:
+                {
+                    PRINT_DEBUG("SWAP r[z]\n");
+                    
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t un = *r & 0xf0;
+                    un = un >> 4;
+                    *r = *r << 4;
+                    *r = *r | un;
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    resetFlag(_cpu, F_C);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                case 7:
+                {
+                    PRINT_DEBUG("SRL r[z]\n");
+                    
+                    uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+                    uint8_t lsb = *r & 0b00000001;
+                    
+                    *r = (*r >> 1);
+                    
+                    lsb ? setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
+                    *r ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+                    
+                    resetFlag(_cpu, F_H);
+                    resetFlag(_cpu, F_N);
+                    
+                    _cpu->regs.PC += 1;
+                    _cpu->cycles += 8;
+                    break;
+                }
+                
                 
                 default:
                 {
@@ -1485,6 +1564,46 @@ void runTestsCPU()
             tmpCpu->regs.B = 0b10000001;
             deExInstPrefixed(tmpCpu, tmpRam, 0x18);
             if(!testEval("RR B", tmpCpu->regs.B == 0b11000000 && getFlag(tmpCpu, F_C) == 1))
+                pass = 0;
+        }
+        
+        //test SLA
+        {
+            resetFlag(tmpCpu, F_C);
+            tmpCpu->regs.B = 0b10000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x20);
+            if(!testEval("SLA B", tmpCpu->regs.B == 0b00000010 && getFlag(tmpCpu, F_C) == 1))
+                pass = 0;
+        }
+        
+        //test SRA
+        {
+            resetFlag(tmpCpu, F_C);
+            tmpCpu->regs.B = 0b10000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x28);
+            if(!testEval("SRA B", tmpCpu->regs.B == 0b11000000 && getFlag(tmpCpu, F_C) == 1))
+                pass = 0;
+        }
+        
+        //test SWAP
+        {
+            tmpCpu->regs.B = 0xf0;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x30);
+            if(!testEval("SWAP B", tmpCpu->regs.B == 0x0f))
+                pass = 0;
+            
+            tmpCpu->regs.B = 0x0f;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x30);
+            if(!testEval("SWAP B", tmpCpu->regs.B == 0xf0))
+                pass = 0;
+        }
+        
+        //test SRL
+        {
+            resetFlag(tmpCpu, F_C);
+            tmpCpu->regs.B = 0b10000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x38);
+            if(!testEval("SRL B", tmpCpu->regs.B == 0b01000000 && getFlag(tmpCpu, F_C) == 1))
                 pass = 0;
         }
         
