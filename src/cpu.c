@@ -1332,14 +1332,38 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         
         case 1:
         {
+            PRINT_DEBUG("BIT y, r[z]\n");
+            uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+            uint8_t mask = 1 << opcode.y;
+            
+            *r & mask ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+             
+            resetFlag(_cpu, F_N);
+            setFlag(_cpu, F_H);
+            _cpu->regs.PC += 1;
+            _cpu->cycles += 8;
             break;
         }
         case 2:
         {
+            PRINT_DEBUG("RES y, r[z]\n");
+            uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+            uint8_t mask = 1 << opcode.y;
+            *r &= ~(mask);
+            
+            _cpu->regs.PC += 1;
+            _cpu->cycles += 8;
             break;
         }
         case 3:
         {
+            PRINT_DEBUG("SET y, r[z]\n");
+            uint8_t* r = getRVal(_cpu, _memory, opcode.z);
+            uint8_t mask = 1 << opcode.y;
+            *r |= mask;
+            
+            _cpu->regs.PC += 1;
+            _cpu->cycles += 8;
             break;
         }
         default:
@@ -1604,6 +1628,27 @@ void runTestsCPU()
             tmpCpu->regs.B = 0b10000001;
             deExInstPrefixed(tmpCpu, tmpRam, 0x38);
             if(!testEval("SRL B", tmpCpu->regs.B == 0b01000000 && getFlag(tmpCpu, F_C) == 1))
+                pass = 0;
+        }
+        //test BIT
+        {
+            resetFlag(tmpCpu, F_Z);
+            tmpCpu->regs.B = 0b11111110;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x40);
+            if(!testEval("BIT 0, B", getFlag(tmpCpu, F_Z) == 1))
+                pass = 0;
+            
+            setFlag(tmpCpu, F_Z);
+            tmpCpu->regs.B = 0b00000001;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x40);
+            if(!testEval("BIT 0, B", getFlag(tmpCpu, F_Z) == 0))
+                pass = 0;
+            
+            
+            setFlag(tmpCpu, F_Z);
+            tmpCpu->regs.B = 0b00001000;
+            deExInstPrefixed(tmpCpu, tmpRam, 0x58);
+            if(!testEval("BIT 4, B", getFlag(tmpCpu, F_Z) == 0))
                 pass = 0;
         }
         
