@@ -1170,7 +1170,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 1:
@@ -1197,7 +1197,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 2:
@@ -1217,7 +1217,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 3:
@@ -1237,7 +1237,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                     
                 }
@@ -1257,7 +1257,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 5:
@@ -1278,7 +1278,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 6:
@@ -1297,7 +1297,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_C);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 case 7:
@@ -1316,7 +1316,7 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     resetFlag(_cpu, F_N);
                     
                     _cpu->regs.PC += 1;
-                    _cpu->cycles += 8;
+                    _cpu->cycles += opcode.z == 6 ? 16 : 8;
                     break;
                 }
                 
