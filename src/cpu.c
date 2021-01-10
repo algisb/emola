@@ -4,7 +4,7 @@
 #include <string.h>
 #include "cpu_t.h"
 #include "alu.h"
-
+#include "interruptHandling.h"
 
 const uint8_t xMask = 0b11000000;
 const uint8_t yMask = 0b00111000;
@@ -125,14 +125,7 @@ static uint8_t getCC(const CPU * _cpu, CC _cc)
 
 void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
 {
-            Opcode opcode = decodeOp(_op);
-        
-//         printf("data: %d\n", opcode.data);
-//         printf("x: %d\n", opcode.x);
-//         printf("y: %d\n", opcode.y);
-//         printf("z: %d\n", opcode.z);
-//         printf("p: %d\n", opcode.p);
-//         printf("q: %d\n", opcode.q);
+    Opcode opcode = decodeOp(_op);
         
     switch(opcode.x)
     {
@@ -532,14 +525,11 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
             if (opcode.z == 6 || opcode.y == 6)
             {
                 PRINT_DEBUG("HALT\n");
-                uint16_t * loc0 = (uint16_t *)&_memory[69];
-                printf("data in mem loc 69: %d\n", *loc0);
-                printf("data in HL: %d\n", _cpu->regs.HL);
-                uint8_t * loc1 = (uint8_t *)&_memory[799];
-                printf("data in loc 799 %d\n", *loc1);
-                printf("data in D %d\n", _cpu->regs.D);
-                printf("dat in BC %d\n",  _cpu->regs.BC);
-                printf("dat in B %d\n",  _cpu->regs.B);
+                //TODO
+                //halts cpu until and interrupt occurs
+                
+                //probably loops the func bellow
+                //handleInterrupts(_cpu, _memory);
                 
                 _cpu->cycles += 4;
                 _cpu->regs.PC += 1;
@@ -630,7 +620,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 7:
                 {
-                    PRINT_DEBUG("AND r[z]\n");
+                    PRINT_DEBUG("CP r[z]\n");
                     cp(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -757,7 +747,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                                     uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
                                     _cpu->regs.PC = *loc;
                                     _cpu->regs.SP += 2;
-                                    //TODO Enable interrupts
+                                    
+                                    _cpu->regs.IME = 1;
                                     
                                     _cpu->cycles += 16;
                                     break;
@@ -894,7 +885,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 6:
                         {
                             PRINT_DEBUG("DI");
-                            //TODO
+                            
+                            _cpu->regs.IME = 0;
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
                             break;
@@ -903,7 +895,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 7:
                         {
                             PRINT_DEBUG("EI");
-                            //TODO
+                            
+                            _cpu->regs.IME = 1;
                             _cpu->regs.PC += 1;
                             _cpu->cycles += 4;
                             break;
@@ -1377,17 +1370,28 @@ void deExInstPrefixed(CPU * _cpu, uint8_t * _memory, uint8_t _op)
 void feDeExInst(CPU * _cpu, uint8_t * _memory)
 {
     fetchByte(_cpu, _memory);
-    if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
+    
+    if(_cpu->regs.IR == 0x76)//halt instruction
+    {
+        deExInst(_cpu, _memory, _cpu->regs.IR);
+        //will likely handle interrupts internally so doesn't need to handle it here
+    }
+    else if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
     {
         _cpu->regs.PC += 1;
         fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
-        
         deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
+        if(_cpu->regs.IME == 1)
+            handleInterrupts(_cpu, _memory);
     }
-    else
+    else //normal execution
     {
         deExInst(_cpu, _memory, _cpu->regs.IR);
+        //interrupt handling
+        if(_cpu->regs.IME == 1)
+            handleInterrupts(_cpu, _memory);
     }
+    
 }
 
 int testEval(char * _testName, int _testCondition)

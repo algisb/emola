@@ -108,7 +108,7 @@ void cp(CPU * _cpu, uint8_t * _n )
     setFlag(_cpu, F_C) : resetFlag(_cpu, F_C);
      
      //_cpu->regs.A -= *_n;
-     _cpu->regs.A ? resetFlag(_cpu, F_Z) : setFlag(_cpu, F_Z);
+     _cpu->regs.A ==  *_n ? setFlag(_cpu, F_Z) : resetFlag(_cpu, F_Z);
      setFlag(_cpu, F_N);
 }
 

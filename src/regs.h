@@ -47,6 +47,8 @@ struct Regs
     uint16_t PC; //Program counter
 
     uint8_t IR; //Instruction register
+    
+    uint8_t IME; //Interrupt master enable flag
 
 };
 typedef struct Regs Regs;
