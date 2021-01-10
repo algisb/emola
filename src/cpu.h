@@ -10,6 +10,8 @@ typedef struct Opcode Opcode;
 
 void createCPU(CPU ** _cpu);
 void destroyCPU(CPU ** _cpu);
+void mapRegisters(CPU* _cpu, uint8_t* _memory);
+
 void feDeExInst(CPU * _cpu, uint8_t * _memory);
 void runTestsCPU();
 

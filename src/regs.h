@@ -49,6 +49,8 @@ struct Regs
     uint8_t IR; //Instruction register
     
     uint8_t IME; //Interrupt master enable flag
+    
+    uint8_t* IF; //memory mapped interrup request register
 
 };
 typedef struct Regs Regs;

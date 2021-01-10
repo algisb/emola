@@ -58,12 +58,17 @@ void createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
     createDisTables(*_cpu);
-    (*_cpu)->regs.SP = 0xFFFE;
+    (*_cpu)->regs.SP = 0xFFFE;//TODO only here for testing, as stack gets initialized elsewhere
 }
 
 void destroyCPU(CPU ** _cpu)
 {
     free(*_cpu);
+}
+
+void mapRegisters(CPU* _cpu, uint8_t* _memory)
+{
+    _cpu->regs.IF = (uint8_t*)(&_memory[0xFF0F]);
 }
 
 static Opcode decodeOp(uint8_t _op)

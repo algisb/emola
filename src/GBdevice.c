@@ -22,6 +22,7 @@ void createGBDevice(GBDevice ** _dev)
     runTestsCPU();
     createCPU(&dev->cpu);
     createRAM(&dev->ram);
+    mapRegisters(dev->cpu, dev->ram);
     
     
     dev->on = 1;
