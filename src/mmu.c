@@ -5,7 +5,7 @@
 
 void createRAM(uint8_t ** _ram)
 {
-    *_ram = (uint8_t*)calloc(RAM_SIZE, 1);
+    *_ram = (uint8_t*)calloc(ADDRESS_SPACE_SIZE, 1);
     uint8_t * ram = *_ram;
     uint16_t * tmp_uint16; 
     int i = 0;

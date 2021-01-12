@@ -1,6 +1,6 @@
 #ifndef DEFS_H_
 #define DEFS_H_
 
-#define RAM_SIZE 65536
+#define ADDRESS_SPACE_SIZE 65536
 
 #endif

@@ -12,7 +12,19 @@ enum INTREQ_TYPE
 };
 typedef enum INTREQ_TYPE INTREQ_TYPE;
 
-
+void jumpToInterruptHandler(CPU* _cpu, uint8_t* _memory, uint16_t _address)
+{
+    //disable interrupts while servicing an iterrupt
+    _cpu->regs.IME = 0;
+    //push PC to stack
+    _cpu->regs.SP -= 2;
+    uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
+    *loc = _cpu->regs.PC;
+    //jump to handler address
+    _cpu->regs.PC = _address;
+    //not sure if this consumes cycles
+    _cpu->cycles += 12;
+}
 void handleInterrupts(CPU* _cpu, uint8_t* _memory)
 {
     
@@ -26,12 +38,8 @@ void handleInterrupts(CPU* _cpu, uint8_t* _memory)
         {
             case INTREQ_VBLANK: //V-Blank  Interrupt Request (INT 40h)
             {
-                //TODO disable interrupts and push the current value of PC onto the stack (not sure if this needs to use up cycles)
-                //TODO transfer control to the interrupt handling routine in the memory using a jump
-                
                 //transfer controll to address 0x0040
-                
-                //_cpu->regs.IME = 0;//disable interrupts while servicing an iterrupt
+                jumpToInterruptHandler(_cpu, _memory, 0x0040);
                 //_cpu->regs.IME = 1;//reenable interrupts //Interrupts probably get renabled by the interrupt handler which probably calls RETI
                 break;
             }
@@ -39,24 +47,27 @@ void handleInterrupts(CPU* _cpu, uint8_t* _memory)
             case INTREQ_LCDSTAT: //LCD STAT Interrupt Request (INT 48h)
             {
                 //transfer controll to address 0x0048
+                jumpToInterruptHandler(_cpu, _memory, 0x0048);
                 break;
             }
             
             case INTREQ_TIMER: //Timer    Interrupt Request (INT 50h)
             {
-
                 //transfer controll to address 0x0050
+                jumpToInterruptHandler(_cpu, _memory, 0x0050);
                 break;
             }
             case INTREQ_SERIAL: //Serial   Interrupt Request (INT 58h)
             {
                 //transfer controll to address 0x0058
+                jumpToInterruptHandler(_cpu, _memory, 0x0058);
                 break;
             }
             
             case INTREQ_JOYPAD: //Joypad   Interrupt Request (INT 60h)
             {
                 //transfer controll to address 0x0060
+                jumpToInterruptHandler(_cpu, _memory, 0x0060);
                 break;
             }
             
@@ -66,6 +77,9 @@ void handleInterrupts(CPU* _cpu, uint8_t* _memory)
                 break;
             }
         }
+        
+        if(_cpu->regs.IME == 0)
+            break;
     }
     
 }

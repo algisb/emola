@@ -89,7 +89,7 @@ static void fetchByte(CPU * _cpu, uint8_t * _memory)
 {
     _cpu->regs.IR = _memory[_cpu->regs.PC];
     
-    if(_cpu->regs.PC > RAM_SIZE)
+    if(_cpu->regs.PC > (ADDRESS_SPACE_SIZE-1))
     {
         _cpu->regs.PC = 0;
     }
@@ -145,20 +145,6 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 0:
                         {
                             PRINT_DEBUG("NOP\n");
-                            //TEST DUMMY VALUES
-                            _cpu->regs.SP = 911;
-                            _cpu->regs.F = 0b00000000;//first bit controls the relative jump
-                            
-                            _cpu->regs.A = 123;
-                            _cpu->regs.BC = 1073;
-                            _cpu->regs.D = 35;
-                            uint8_t * loc0 = (uint8_t *)(&_memory[_cpu->regs.BC]);
-                            *loc0 = 59;
-                            
-                            //TEST DUMMY VALUES
-                            
-                            
-                            
                             _cpu->cycles += 4;
                             _cpu->regs.PC += 1;
                             break;
@@ -176,6 +162,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 2:
                         {
                             PRINT_DEBUG("STOP\n");
+                            while(1);
                             _cpu->cycles += 4;
                             _cpu->regs.PC += 2;
                             break;
@@ -1376,25 +1363,26 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
 {
     fetchByte(_cpu, _memory);
     
-    if(_cpu->regs.IR == 0x76)//halt instruction
+    
+    //TODO halt and stop will need special handling
+    //TODO DI and EI only should come in effect after the next instruction
+    if(_cpu->regs.IME == 1)
     {
-        deExInst(_cpu, _memory, _cpu->regs.IR);
-        //will likely handle interrupts internally so doesn't need to handle it here
-    }
-    else if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
-    {
-        _cpu->regs.PC += 1;
-        fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
-        deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
-        if(_cpu->regs.IME == 1)
-            handleInterrupts(_cpu, _memory);
-    }
-    else //normal execution
-    {
-        deExInst(_cpu, _memory, _cpu->regs.IR);
         //interrupt handling
-        if(_cpu->regs.IME == 1)
-            handleInterrupts(_cpu, _memory);
+        handleInterrupts(_cpu, _memory);
+    }
+    else
+    {
+        if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
+        {
+            _cpu->regs.PC += 1;
+            fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
+            deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
+        }
+        else //normal execution
+        {
+            deExInst(_cpu, _memory, _cpu->regs.IR);
+        }
     }
     
 }
@@ -1417,7 +1405,7 @@ void runTestsCPU()
 {
     CPU * tmpCpu;
     createCPU(&tmpCpu);
-    uint8_t * tmpRam = (uint8_t*)calloc(RAM_SIZE, 1);
+    uint8_t * tmpRam = (uint8_t*)calloc(ADDRESS_SPACE_SIZE, 1);
     
     int pass = 1;
     //BEGIN test
