@@ -3,16 +3,9 @@
 #include <stdio.h>
 #include <time.h>
 #include "cpu.h"
+#include "cpu_t.h"
 #include "defs.h"
 #include "mmu.h"
-struct GBDevice
-{
-    int on;
-    CPU * cpu;
-    unsigned char * ram;
-    double timePrev;
-    unsigned long long ticks;
-};
 
 void createGBDevice(GBDevice ** _dev)
 {
@@ -26,8 +19,6 @@ void createGBDevice(GBDevice ** _dev)
     
     
     dev->on = 1;
-    dev->timePrev = 0.0f;
-    dev->ticks = 0;
     *_dev = dev;
 
 }
@@ -43,9 +34,10 @@ void destroyGBDevice(GBDevice ** _dev)
 
 void run(GBDevice *_dev)
 {
-    while(_dev->on)//each tick
+    //sim runs at 60 fps
+    while(_dev->cpu->cycles < GB_CYCLES_PER_FRAME)
     {
         feDeExInst(_dev->cpu, _dev->ram);
     }
-    printf("GBdevice turning off \n");              
+    _dev->cpu->cycles = 0;
 }

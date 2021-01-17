@@ -5,7 +5,7 @@
 
 void createRAM(uint8_t ** _ram)
 {
-    *_ram = (uint8_t*)calloc(ADDRESS_SPACE_SIZE, 1);
+    *_ram = (uint8_t*)calloc(GB_ADDRESS_SPACE_SIZE, 1);
     uint8_t * ram = *_ram;
     uint16_t * tmp_uint16; 
     int i = 0;
@@ -18,11 +18,6 @@ void createRAM(uint8_t ** _ram)
     tmp_uint16 = (uint16_t*)(ram + i);
     *tmp_uint16 = 69;
     i+=2;
-    //(JR d)
-    ram[i] = 0x28;
-    i++;
-    ram[i] = -6;
-    i++;
     
     //LD HL dd
     ram[i] = 0x21;

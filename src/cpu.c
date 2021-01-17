@@ -5,6 +5,7 @@
 #include "cpu_t.h"
 #include "alu.h"
 #include "interruptHandling.h"
+#include <SDL2/SDL.h>
 
 const uint8_t xMask = 0b11000000;
 const uint8_t yMask = 0b00111000;
@@ -27,7 +28,7 @@ printf(_str)
 int logUnhandledOp (int _line, Opcode _opcode)
 {
     printf("ERROR: unhandled opcode 0x%02x -> %s -> line: %d\n", _opcode.data, __FILE__, _line);
-    while(1);
+    exit (EXIT_FAILURE);
 }
 #define LOG_ERROR_OP( opcode ) logUnhandledOp( __LINE__, opcode)
 
@@ -58,6 +59,7 @@ void createCPU(CPU ** _cpu)
 {
     *_cpu = (CPU*)malloc(sizeof(CPU));
     createDisTables(*_cpu);
+    (*_cpu)->cycles = 0;
     (*_cpu)->regs.SP = 0xFFFE;//TODO only here for testing, as stack gets initialized elsewhere
 }
 
@@ -89,7 +91,7 @@ static void fetchByte(CPU * _cpu, uint8_t * _memory)
 {
     _cpu->regs.IR = _memory[_cpu->regs.PC];
     
-    if(_cpu->regs.PC > (ADDRESS_SPACE_SIZE-1))
+    if(_cpu->regs.PC > (GB_ADDRESS_SPACE_SIZE-1))
     {
         _cpu->regs.PC = 0;
     }
@@ -162,9 +164,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 2:
                         {
                             PRINT_DEBUG("STOP\n");
-                            while(1);
                             _cpu->cycles += 4;
-                            _cpu->regs.PC += 2;
+                            //_cpu->regs.PC += 2;
                             break;
                         }
                         
@@ -517,6 +518,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
             if (opcode.z == 6 || opcode.y == 6)
             {
                 PRINT_DEBUG("HALT\n");
+                //exit (EXIT_SUCCESS);
                 //TODO
                 //halts cpu until and interrupt occurs
                 
@@ -524,8 +526,8 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 //handleInterrupts(_cpu, _memory);
                 
                 _cpu->cycles += 4;
-                _cpu->regs.PC += 1;
-                while(1);
+                //_cpu->regs.PC += 1;
+                //while(1);
             }
             else
             {
@@ -1371,18 +1373,15 @@ void feDeExInst(CPU * _cpu, uint8_t * _memory)
         //interrupt handling
         handleInterrupts(_cpu, _memory);
     }
-    else
+    if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
     {
-        if(_cpu->regs.IR == 0xCB)//prefix byte, means using different instructions
-        {
-            _cpu->regs.PC += 1;
-            fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
-            deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
-        }
-        else //normal execution
-        {
-            deExInst(_cpu, _memory, _cpu->regs.IR);
-        }
+        _cpu->regs.PC += 1;
+        fetchByte(_cpu, _memory);//fetch another instruction as prefix byte was present
+        deExInstPrefixed(_cpu, _memory, _cpu->regs.IR);
+    }
+    else //normal execution
+    {
+        deExInst(_cpu, _memory, _cpu->regs.IR);
     }
     
 }
@@ -1405,7 +1404,7 @@ void runTestsCPU()
 {
     CPU * tmpCpu;
     createCPU(&tmpCpu);
-    uint8_t * tmpRam = (uint8_t*)calloc(ADDRESS_SPACE_SIZE, 1);
+    uint8_t * tmpRam = (uint8_t*)calloc(GB_ADDRESS_SPACE_SIZE, 1);
     
     int pass = 1;
     //BEGIN test
@@ -1657,7 +1656,7 @@ void runTestsCPU()
     else
         printf("--CPU TESTS FAILED--\n");
     
-    
+    SDL_Delay(3000);
     free(tmpRam);
     destroyCPU(&tmpCpu);
 }
