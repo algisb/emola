@@ -60,7 +60,18 @@ void createCPU(CPU ** _cpu)
     *_cpu = (CPU*)malloc(sizeof(CPU));
     createDisTables(*_cpu);
     (*_cpu)->cycles = 0;
+    
+    (*_cpu)->regs.AF = 0;
+    (*_cpu)->regs.BC = 0;
+    (*_cpu)->regs.DE = 0;
+    (*_cpu)->regs.HL = 0;
+    
     (*_cpu)->regs.SP = 0xFFFE;//TODO only here for testing, as stack gets initialized elsewhere
+    (*_cpu)->regs.PC = 0;
+    (*_cpu)->regs.IR = 0;
+    (*_cpu)->regs.IME = 1;
+    (*_cpu)->regs.IF = NULL;
+    
 }
 
 void destroyCPU(CPU ** _cpu)
@@ -517,7 +528,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
         {
             if (opcode.z == 6 || opcode.y == 6)
             {
-                PRINT_DEBUG("HALT\n");
+                //PRINT_DEBUG("HALT\n");
                 //exit (EXIT_SUCCESS);
                 //TODO
                 //halts cpu until and interrupt occurs
