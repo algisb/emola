@@ -19,10 +19,17 @@ typedef struct Regs Regs;
 #define SHOW_DEBUG_INFO
 
 #ifdef SHOW_DEBUG_INFO
-#define PRINT_DEBUG(_str) \
-printf(_str)
+#define PRINT_DEBUG(_str, ...) \
+printf(_str, ##__VA_ARGS__)
 #else
 #define PRINT_DEBUG(_str)
+#endif
+
+#ifdef SHOW_DEBUG_INFO
+const char* r_table_dbg[] = {"B", "C", "D", "E", "H", "L", "(HL)", "A"};
+const char* rp_table_dbg[] = {"BC", "DE", "HL", "SP"};
+const char* rp2_table_dbg[] = {"BC", "DE", "HL", "AF"};
+const char* cc_table_dbg[] = {"NZ", "Z", "NC", "C"};
 #endif
 
 int logUnhandledOp (int _line, Opcode _opcode)
@@ -164,7 +171,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         }
                         case 1:
                         {
-                            PRINT_DEBUG("LD (nn) SP\n");
+                            PRINT_DEBUG("LD (nn), SP\n");
                             uint16_t * loc0 = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);//pointer to the immediate data after the instruction
                             uint16_t * loc1 = (uint16_t *)(&_memory[*loc0]);//immediate data is a memory location, so we need to dereference
                             *loc1 = _cpu->regs.SP;
@@ -194,7 +201,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 6:
                         case 7:
                         {
-                            PRINT_DEBUG("JR cc[y-4] d\n");
+                            PRINT_DEBUG("JR %s, d\n", cc_table_dbg[opcode.y - 4]);
                             if(getCC(_cpu, opcode.y - 4))
                             {
                                 int8_t * loc0 = (int8_t *)(&_memory[_cpu->regs.PC + 1]);
@@ -223,7 +230,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     {
                         case 0:
                         {
-                            PRINT_DEBUG("LD rp[p] nn\n");
+                            PRINT_DEBUG("LD %s, nn\n", rp_table_dbg[opcode.p]);
                             uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
                             *(_cpu->rptable[opcode.p]) = *loc;
                             
@@ -234,7 +241,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 1:
                         {
-                            PRINT_DEBUG("ADD HL rp[p]\n");
+                            PRINT_DEBUG("ADD HL, %s\n", rp_table_dbg[opcode.p]);
                             addHLuint16(_cpu, _cpu->rptable[opcode.p]);
                             
                             _cpu->regs.PC += 1;
@@ -309,7 +316,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 3://z
                 {
-                    opcode.q == 0 ? PRINT_DEBUG("INC rp[p]\n") : PRINT_DEBUG("DEC rp[p]\n");
+                    opcode.q == 0 ? PRINT_DEBUG("INC %s\n", rp_table_dbg[opcode.p]) : PRINT_DEBUG("DEC %s\n", rp_table_dbg[opcode.p]);
                     uint16_t * v  = _cpu->rptable[opcode.p];
                     opcode.q == 0 ? (*v)++ : (*v)--;
                     _cpu->regs.PC += 1;
@@ -320,7 +327,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 case 4://z
                 case 5://z
                 {
-                    opcode.z == 4 ? PRINT_DEBUG("INC r[y]\n") : PRINT_DEBUG("DEC r[y]\n");
+                    opcode.z == 4 ? PRINT_DEBUG("INC %s\n", r_table_dbg[opcode.y]) : PRINT_DEBUG("DEC %s\n", r_table_dbg[opcode.y]);
                     uint8_t * v = getRVal(_cpu, _memory, opcode.y);
                     
                     //process flags
@@ -340,7 +347,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 
                 case 6://z
                 {
-                    PRINT_DEBUG("LD r[y], n\n");
+                    PRINT_DEBUG("LD %s, n\n", r_table_dbg[opcode.y]);
                     uint8_t * loc = (uint8_t *)(&_memory[_cpu->regs.PC + 1]);
                     uint8_t * v = getRVal(_cpu, _memory, opcode.y);
                     *v = *loc;
@@ -542,7 +549,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
             }
             else
             {
-                PRINT_DEBUG("LD r[y] r[z]\n");
+                PRINT_DEBUG("LD %s, %s\n", r_table_dbg[opcode.y], r_table_dbg[opcode.z]);
                 uint8_t * v0 = getRVal(_cpu, _memory, opcode.y);
                 uint8_t * v1 = getRVal(_cpu, _memory, opcode.z);
                 *v0 = *v1;
@@ -562,7 +569,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
             {
                 case 0:
                 {
-                    PRINT_DEBUG("ADD r[z]\n");
+                    PRINT_DEBUG("ADD %s\n", r_table_dbg[opcode.z]);
                     add(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -571,7 +578,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 1:
                 {
-                    PRINT_DEBUG("ADC r[z]\n");
+                    PRINT_DEBUG("ADC %s\n", r_table_dbg[opcode.z]);
                     adc(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -580,7 +587,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }   
                 case 2:
                 {
-                    PRINT_DEBUG("SUB r[z]\n");
+                    PRINT_DEBUG("SUB %s\n", r_table_dbg[opcode.z]);
                     sub(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -589,7 +596,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 3:
                 {
-                    PRINT_DEBUG("SBC r[z]\n");
+                    PRINT_DEBUG("SBC %s\n", r_table_dbg[opcode.z]);
                     sbc(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -598,7 +605,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 4:
                 {
-                    PRINT_DEBUG("AND r[z]\n");
+                    PRINT_DEBUG("AND %s\n", r_table_dbg[opcode.z]);
                     and(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -607,7 +614,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 5:
                 {
-                    PRINT_DEBUG("XOR r[z]\n");
+                    PRINT_DEBUG("XOR %s\n", r_table_dbg[opcode.z]);
                     xor(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -616,7 +623,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 6:
                 {
-                    PRINT_DEBUG("OR r[z]\n");
+                    PRINT_DEBUG("OR %s\n", r_table_dbg[opcode.z]);
                     or(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -625,7 +632,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                 }
                 case 7:
                 {
-                    PRINT_DEBUG("CP r[z]\n");
+                    PRINT_DEBUG("CP %s\n", r_table_dbg[opcode.z]);
                     cp(_cpu, getRVal(_cpu, _memory,  opcode.z));
                     
                     _cpu->cycles += opcode.z == 6 ? 8 : 4;
@@ -653,7 +660,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 2:
                         case 3:
                         {
-                            PRINT_DEBUG("RET cc[y]\n");
+                            PRINT_DEBUG("RET %s\n", cc_table_dbg[opcode.y]);
                             if (getCC(_cpu, opcode.y))
                             {
                                 uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
@@ -723,7 +730,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     {
                         case 0:
                         {
-                            PRINT_DEBUG("POP rp2[p]\n");
+                            PRINT_DEBUG("POP %s\n", rp2_table_dbg[opcode.p]);
                             uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
                             *_cpu->rp2table[opcode.p] = *loc;
                             _cpu->regs.SP += 2;
@@ -802,7 +809,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 2:
                         case 3:
                         {
-                            PRINT_DEBUG("JP cc[y], nn");
+                            PRINT_DEBUG("JP %s, nn\n", cc_table_dbg[opcode.y]);
                             if (getCC(_cpu, opcode.y))
                             {
                                 uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
@@ -818,7 +825,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 4:
                         {
-                            PRINT_DEBUG("LD (0xFF00+C), A");
+                            PRINT_DEBUG("LD (0xFF00+C), A\n");
                             uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + _cpu->regs.C]);
                             *loc = _cpu->regs.A;
                             
@@ -829,7 +836,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 5:
                         {
-                            PRINT_DEBUG("LD (nn), A");
+                            PRINT_DEBUG("LD (nn), A\n");
                             uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
                             uint8_t * loc = (uint8_t *)(&_memory[*nn]);
                             *loc = _cpu->regs.A;
@@ -841,7 +848,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 6:
                         {
-                            PRINT_DEBUG("LD A, (0xFF00+C)");
+                            PRINT_DEBUG("LD A, (0xFF00+C)\n");
                             uint8_t * loc = (uint8_t *)(&_memory[0xFF00 + _cpu->regs.C]);
                             _cpu->regs.A = *loc;
                             
@@ -852,7 +859,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 7:
                         {
-                            PRINT_DEBUG("LD A, (nn)");
+                            PRINT_DEBUG("LD A, (nn)\n");
                             uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
                             uint8_t * loc = (uint8_t *)(&_memory[*nn]);
                             _cpu->regs.A = *loc;
@@ -878,7 +885,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     {
                         case 0:
                         {
-                            PRINT_DEBUG("JP nn");
+                            PRINT_DEBUG("JP nn\n");
                             uint16_t * nn = (uint16_t *)(&_memory[_cpu->regs.PC + 1]);
                             _cpu->regs.PC = *nn;
                             
@@ -889,7 +896,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 6:
                         {
-                            PRINT_DEBUG("DI");
+                            PRINT_DEBUG("DI\n");
                             
                             _cpu->regs.IME = 0;
                             _cpu->regs.PC += 1;
@@ -899,7 +906,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         
                         case 7:
                         {
-                            PRINT_DEBUG("EI");
+                            PRINT_DEBUG("EI\n");
                             
                             _cpu->regs.IME = 1;
                             _cpu->regs.PC += 1;
@@ -924,7 +931,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                         case 2:
                         case 3:
                         {
-                            PRINT_DEBUG("CALL cc[y], nn\n");
+                            PRINT_DEBUG("CALL %s, nn\n", cc_table_dbg[opcode.y]);
                             if (getCC(_cpu, opcode.y))
                             {
                                 //push
@@ -961,7 +968,7 @@ void deExInst(CPU * _cpu, uint8_t * _memory, uint8_t _op)
                     {
                         case 0:
                         {
-                            PRINT_DEBUG("PUSH rp2[p]\n");
+                            PRINT_DEBUG("PUSH %s\n", rp2_table_dbg[opcode.p]);
                             _cpu->regs.SP -= 2;
                             uint16_t * loc = (uint16_t *)(&_memory[_cpu->regs.SP]);
                             *loc = *_cpu->rp2table[opcode.p];
