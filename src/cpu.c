@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "debug.h"
 #include "cpu_t.h"
 #include "alu.h"
 #include "interruptHandling.h"
@@ -16,14 +17,6 @@ const uint8_t zMask = 0b00000111;
 typedef struct Regs Regs;
 
 
-#define SHOW_DEBUG_INFO
-
-#ifdef SHOW_DEBUG_INFO
-#define PRINT_DEBUG(_str, ...) \
-printf(_str, ##__VA_ARGS__)
-#else
-#define PRINT_DEBUG(_str)
-#endif
 
 #ifdef SHOW_DEBUG_INFO
 const char* r_table_dbg[] = {"B", "C", "D", "E", "H", "L", "(HL)", "A"};
@@ -34,7 +27,7 @@ const char* cc_table_dbg[] = {"NZ", "Z", "NC", "C"};
 
 int logUnhandledOp (int _line, Opcode _opcode)
 {
-    printf("ERROR: unhandled opcode 0x%02x -> %s -> line: %d\n", _opcode.data, __FILE__, _line);
+    PRINT_DEBUG("ERROR: unhandled opcode 0x%02x -> %s -> line: %d\n", _opcode.data, __FILE__, _line);
     exit (EXIT_FAILURE);
 }
 #define LOG_ERROR_OP( opcode ) logUnhandledOp( __LINE__, opcode)
@@ -1408,12 +1401,12 @@ int testEval(char * _testName, int _testCondition)
 {
     if(_testCondition)
     {
-        printf("test %s - PASS\n", _testName);
+        PRINT_DEBUG("test %s - PASS\n", _testName);
         return 1;
     }
     else
     {
-        printf("test %s - FAIL\n", _testName);
+        PRINT_DEBUG("test %s - FAIL\n", _testName);
         return 0;
     }
 }
@@ -1670,11 +1663,11 @@ void runTestsCPU()
     }
     //END test
     if(pass)
-        printf("--CPU TESTS PASSED--\n");
+        PRINT_DEBUG("--CPU TESTS PASSED--\n");
     else
-        printf("--CPU TESTS FAILED--\n");
+        PRINT_DEBUG("--CPU TESTS FAILED--\n");
     
-    SDL_Delay(3000);
+    //SDL_Delay(3000);
     free(tmpRam);
     destroyCPU(&tmpCpu);
 }

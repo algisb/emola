@@ -4,9 +4,12 @@
 #include <SDL2/SDL.h>
 #include "GBdevice.h"
 #include "defs.h"
+#include "debug.h"
 
 int main(int argc, char ** argv)
 {
+    dbg_initLogging();
+    
     SDL_Window* window = NULL;
     SDL_Surface* screenSurface = NULL;
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -50,6 +53,7 @@ int main(int argc, char ** argv)
     destroyGBDevice(&device);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    dbg_deinitLogging();
 
 	return 0;
 }

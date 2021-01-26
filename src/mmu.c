@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "defs.h"
+#include "debug.h"
 
 void createRAM(uint8_t** _ram)
 {
@@ -56,16 +57,16 @@ void createRAM(uint8_t** _ram)
 //     i++;
 //     ram[i] = 0x00;
 //     i++;
-//     
-//     
+    
+    
     //HALT
     ram[i] = 0x76;
 //     
-    printf("program in memory:\n");
+    PRINT_DEBUG("program in memory:\n");
     for(int j = 0; j<i; j++)
-        printf("0x%02x ",ram[j]);
-    printf("\n");
-    printf("-------------------------------\n");
+        PRINT_DEBUG("0x%02x ",ram[j]);
+    PRINT_DEBUG("\n");
+    PRINT_DEBUG("-------------------------------\n");
     
 
 }
@@ -91,7 +92,7 @@ uint64_t loadBin(uint8_t* _ram, uint16_t _loc, char* _path)
     // copy the file into the buffer:
     result = fread (buffer,1,lSize,pFile);
     if (result != lSize) {fputs ("Reading error",stderr); exit (3);}
-    printf("Loaded binary size %lu bytes\n", lSize);
+    PRINT_DEBUG("Loaded binary size %lu bytes\n", lSize);
     
     memcpy(&_ram[_loc], buffer, lSize);
     
